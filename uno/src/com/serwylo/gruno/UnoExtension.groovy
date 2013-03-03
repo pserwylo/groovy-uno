@@ -16,6 +16,7 @@ import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
 import com.sun.star.table.CellAddress
+import com.sun.star.table.CellRangeAddress
 import com.sun.star.table.XCell
 import com.sun.star.table.XCellRange
 import com.sun.star.table.XColumnRowRange
@@ -30,14 +31,6 @@ import com.sun.star.util.XReplaceable
 
 class UnoExtension {
 
-	public static XSpreadsheetDocument getDocument( XComponent component ) {
-		UnoRuntime.queryInterface( XSpreadsheetDocument.class, component )
-	}
-
-	public static XComponent loadSpreadsheet( XComponentLoader loader ) {
-		loader.loadComponentFromURL( "private:factory/scalc", "_blank", 0, new PropertyValue[0] );
-	}
-
 	public static XSpreadsheet getAt( XSpreadsheets spreadsheets, int index ) {
 		XIndexAccess xSheetsIA = UnoRuntime.queryInterface( XIndexAccess.class, spreadsheets )
 		UnoRuntime.queryInterface( XSpreadsheet.class, xSheetsIA.getByIndex( index ) )
@@ -47,8 +40,90 @@ class UnoExtension {
 		UnoRuntime.queryInterface( XSpreadsheet.class, spreadsheets.getByName( key ) )
 	}
 
+	public static XCellRange getAt( XSpreadsheet spreadsheet, String key ) {
+		UnoRuntime.queryInterface( XCellRange.class, spreadsheet.getCellRangeByName( key ) )
+	}
+
+	public static XCell getCellAt( XSpreadsheet spreadsheet, String key ) {
+		if ( key.contains( ':' ) ) {
+			throw new IllegalArgumentException( "Cannot specify a cell range, must be a single cell." )
+		}
+		spreadsheet[ key ].getCellByPosition( 0, 0 )
+	}
+
+	public static void setValue( XCellRange range, double value ) {
+		range.getCellByPosition( 0, 0 ).setValue( value )
+	}
+
+	public static double getValue( XCellRange range ) {
+		range.getCellByPosition( 0, 0 ).getValue()
+	}
+
+	public static void setFormula( XCellRange range, String value ) {
+		range.getCellByPosition( 0, 0 ).setFormula( value )
+	}
+
+	public static String getFormula( XCellRange range ) {
+		range.getCellByPosition( 0, 0 ).getFormula()
+	}
+
+	public static void leftShift( XCellRange range, double value ) {
+		CellRangeAddress address = range.address
+		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
+			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
+				range.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setValue( value )
+			}
+		}
+	}
+
+	public static void leftShift( XCell destCell, XCell sourceCell ) {
+		String formula = sourceCell.formula
+		if ( formula ) {
+			destCell.formula = formula
+		} else {
+			destCell.value = sourceCell.value
+		}
+	}
+
+	public static void leftShift( XCellRange destRange, XCellRange sourceRange ) {
+
+		CellRangeAddress destAddress   = destRange.address
+		CellRangeAddress sourceAddress = sourceRange.address
+
+		int destColumns   = destAddress.EndColumn   - destAddress.StartColumn
+		int destRows      = destAddress.EndRow      - destAddress.StartRow
+		int sourceColumns = sourceAddress.EndColumn - sourceAddress.StartColumn
+		int sourceRows    = sourceAddress.EndRow    - sourceAddress.StartRow
+
+		if ( destColumns != sourceColumns || destRows != sourceRows ) {
+			throw new IllegalArgumentException( "Both cell ranges must be the same size." )
+		}
+
+		for ( int column = 0; column <= destColumns; column ++ ) {
+			for ( int row = 0; row <= destRows; row ++ ) {
+				XCell sourceCell = sourceRange.getCellByPosition( column, row )
+				XCell destCell   = destRange.getCellByPosition( column, row )
+				destCell << sourceCell
+			}
+		}
+	}
+
+	public static void leftShift( XCellRange range, String formula ) {
+		CellRangeAddress address = range.address
+		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
+			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
+				range.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setFormula( formula )
+			}
+		}
+	}
+
 	public static XText getText( XCell cell ) {
 		UnoRuntime.queryInterface( XText.class, cell )
+	}
+
+	public static CellRangeAddress getAddress( XCellRange range ) {
+		XCellRangeAddressable xAddr = UnoRuntime.queryInterface( XCellRangeAddressable.class, range )
+		xAddr.rangeAddress
 	}
 
 	public static XEnumerationAccess getEnumerationAccess( XCell cell ) {

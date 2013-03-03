@@ -33,11 +33,18 @@
  *************************************************************************/
 
 
+
+import com.serwylo.gruno.Connector
 import com.sun.star.comp.helper.Bootstrap
 import com.sun.star.frame.XComponentLoader
+import com.sun.star.lang.XMultiComponentFactory
+import com.sun.star.sheet.XCellAddressable
+import com.sun.star.sheet.XCellRangeAddressable
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
+import com.sun.star.table.CellAddress
+import com.sun.star.table.CellRangeAddress
 import com.sun.star.uno.RuntimeException;
 import com.sun.star.uno.UnoRuntime
 import com.sun.star.uno.XComponentContext;
@@ -49,9 +56,9 @@ import com.sun.star.uno.XComponentContext;
 public class GroovySpreadsheetDocHelper
 {
 
-    private com.sun.star.uno.XComponentContext remoteContext;
-    private com.sun.star.lang.XMultiComponentFactory  mxRemoteServiceManager;
-    private com.sun.star.sheet.XSpreadsheetDocument document;
+	private Connector connector = new Connector()
+
+    private XSpreadsheetDocument document;
 
     public GroovySpreadsheetDocHelper( String[] args )
     {
@@ -77,14 +84,11 @@ public class GroovySpreadsheetDocHelper
 
     /** Returns the service manager of the connected office.
         @return  XMultiComponentFactory interface of the service manager. */
-    public com.sun.star.lang.XMultiComponentFactory getServiceManager()
-    {
-        return mxRemoteServiceManager;
-    }
+    public XMultiComponentFactory getServiceManager() { connector.serviceManager }
 
     /** Returns the component context of the connected office
         @return  XComponentContext interface of the context. */
-    public XComponentContext getContext() { remoteContext }
+    public XComponentContext getContext() { connector.context }
 
     /** Returns the whole spreadsheet document.
         @return  XSpreadsheetDocument interface of the document. */
@@ -99,13 +103,10 @@ public class GroovySpreadsheetDocHelper
         // Collection of sheets
         XSpreadsheets xSheets = document.sheets
         XSpreadsheet xSheet = null
-        try
-        {
-            xSheets.insertNewByName( aName, nIndex );
-            xSheet = UnoRuntime.queryInterface( XSpreadsheet.class, xSheets.getByName( aName ) );
-        }
-        catch (Exception ex)
-        {
+        try {
+            xSheets.insertNewByName( aName, nIndex )
+            xSheet = xSheets[ aName ]
+        } catch ( Exception ex ) {
             println "Error: caught exception in insertSpreadsheet()!\nException Message = $ex.message"
             ex.printStackTrace()
         }
@@ -120,11 +121,11 @@ public class GroovySpreadsheetDocHelper
         @param aCellName  The address of the cell (or a named range).
         @param fValue  The value to write into the cell. */
     public void setValue(
-            com.sun.star.sheet.XSpreadsheet xSheet,
-            String aCellName,
-            double fValue ) throws RuntimeException, Exception
+		XSpreadsheet xSheet,
+		String aCellName,
+		double fValue ) throws RuntimeException, Exception
     {
-        xSheet.getCellRangeByName( aCellName ).getCellByPosition( 0, 0 ).setValue( fValue );
+        xSheet[ aCellName ].value = fValue;
     }
 
     /** Writes a formula into a spreadsheet.
@@ -136,7 +137,7 @@ public class GroovySpreadsheetDocHelper
             String aCellName,
             String aFormula ) throws RuntimeException, Exception
     {
-        xSheet.getCellRangeByName( aCellName ).getCellByPosition( 0, 0 ).setFormula( aFormula );
+        xSheet[ aCellName ].formula = aFormula
     }
 
     /** Writes a date with standard date format into a spreadsheet.
@@ -221,27 +222,16 @@ public class GroovySpreadsheetDocHelper
         with the given range.
         @param xSheet  The XSpreadsheet interface of the spreadsheet.
         @param aCell  The address of the cell (or a named cell). */
-    public com.sun.star.table.CellAddress createCellAddress(
-            com.sun.star.sheet.XSpreadsheet xSheet,
-            String aCell ) throws RuntimeException, Exception
-    {
-        com.sun.star.sheet.XCellAddressable xAddr =
-            UnoRuntime.queryInterface( com.sun.star.sheet.XCellAddressable.class,
-                xSheet.getCellRangeByName( aCell ).getCellByPosition( 0, 0 ) );
-        return xAddr.getCellAddress();
+    public CellAddress createCellAddress( XSpreadsheet xSheet, String aCell ) throws RuntimeException, Exception {
+        xSheet.getCellAt( aCell ).address;
     }
 
     /** Creates a com.sun.star.table.CellRangeAddress and initializes
         it with the given range.
         @param xSheet  The XSpreadsheet interface of the spreadsheet.
         @param aRange  The address of the cell range (or a named range). */
-    public com.sun.star.table.CellRangeAddress createCellRangeAddress(
-            com.sun.star.sheet.XSpreadsheet xSheet, String aRange )
-    {
-        com.sun.star.sheet.XCellRangeAddressable xAddr =
-            UnoRuntime.queryInterface( com.sun.star.sheet.XCellRangeAddressable.class,
-                xSheet.getCellRangeByName( aRange ) );
-        return xAddr.getRangeAddress();
+    public CellRangeAddress createCellRangeAddress( XSpreadsheet xSheet, String aRange ) {
+        xSheet[ aRange ].address
     }
 
 // ________________________________________________________________
@@ -318,28 +308,13 @@ public class GroovySpreadsheetDocHelper
 
     // Connect to a running office that is accepting connections.
     private void connect() {
-        if ( remoteContext == null && mxRemoteServiceManager == null ) {
-            try {
-                // First step: get the remote office component context
-                remoteContext = Bootstrap.bootstrap()
-                println "Connected to a running office ..."
-                mxRemoteServiceManager = remoteContext.serviceManager
-            }
-            catch( Exception e ) {
-                System.err.println "ERROR: can't get a component context from a running office ..."
-                e.printStackTrace()
-                System.exit( 1 )
-            }
-        }
+		connector.connect()
     }
 
     /** Creates an empty spreadsheet document.
         @return  The XSpreadsheetDocument interface of the document. */
     private XSpreadsheetDocument initDocument() throws RuntimeException, Exception {
-        XComponentLoader aLoader = UnoRuntime.queryInterface(
-			XComponentLoader.class,
-			mxRemoteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", remoteContext))
-        aLoader.loadSpreadsheet().document
+       	connector.loadSpreadsheet()
     }
 
 // ________________________________________________________________
