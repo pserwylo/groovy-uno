@@ -3,9 +3,6 @@ package com.serwylo.gruno
 import com.sun.star.beans.XPropertySet
 import com.sun.star.container.XEnumerationAccess
 import com.sun.star.container.XIndexAccess
-import com.sun.star.frame.XComponentLoader
-import com.sun.star.lang.XComponent
-import com.sun.star.lang.XMultiServiceFactory
 import com.sun.star.sheet.XCellAddressable
 import com.sun.star.sheet.XCellRangeAddressable
 import com.sun.star.sheet.XCellRangeData
@@ -13,7 +10,6 @@ import com.sun.star.sheet.XSheetAnnotationAnchor
 import com.sun.star.sheet.XSheetAnnotationsSupplier
 import com.sun.star.sheet.XSheetOperation
 import com.sun.star.sheet.XSpreadsheet
-import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
 import com.sun.star.table.CellAddress
 import com.sun.star.table.CellRangeAddress
@@ -24,70 +20,96 @@ import com.sun.star.table.XTableColumns
 import com.sun.star.table.XTableRows
 import com.sun.star.text.XText
 import com.sun.star.uno.UnoRuntime
-import com.sun.star.beans.PropertyValue
 import com.sun.star.util.XMergeable
 import com.sun.star.util.XReplaceDescriptor
 import com.sun.star.util.XReplaceable
 
 class UnoExtension {
 
-	public static XSpreadsheet getAt( XSpreadsheets spreadsheets, int index ) {
-		XIndexAccess xSheetsIA = UnoRuntime.queryInterface( XIndexAccess.class, spreadsheets )
+	// http://groovy.codehaus.org/ExpandoMetaClass+-+Properties
+	private static properties = Collections.synchronizedMap([:])
+
+	private static Closure  cache = { Object self, String propName, Closure<Object> closure ->
+		Object value
+		String key = System.identityHashCode( self ) + "-" + propName
+		if ( properties.containsKey( key ) ) {
+			value = properties[ key ]
+		} else {
+			value = closure()
+			properties[ key ] = value
+		}
+		return value
+	}
+
+
+	// ========= XSpreadsheets =========
+
+	public static XSpreadsheet getAt( XSpreadsheets self, int index ) {
+		XIndexAccess xSheetsIA = UnoRuntime.queryInterface( XIndexAccess.class, self )
 		UnoRuntime.queryInterface( XSpreadsheet.class, xSheetsIA.getByIndex( index ) )
 	}
 
-	public static XSpreadsheet getAt( XSpreadsheets spreadsheets, String key ) {
-		UnoRuntime.queryInterface( XSpreadsheet.class, spreadsheets.getByName( key ) )
+	public static XSpreadsheet getAt( XSpreadsheets self, String key ) {
+		UnoRuntime.queryInterface( XSpreadsheet.class, self.getByName( key ) )
 	}
 
-	public static XCellRange getAt( XSpreadsheet spreadsheet, String key ) {
-		UnoRuntime.queryInterface( XCellRange.class, spreadsheet.getCellRangeByName( key ) )
-	}
 
-	public static XCell getCellAt( XSpreadsheet spreadsheet, String key ) {
-		if ( key.contains( ':' ) ) {
-			throw new IllegalArgumentException( "Cannot specify a cell range, must be a single cell." )
+
+	// ========= XSpreadsheet =========
+
+	public static XCellRange getAt( XSpreadsheet self, String key ) {
+		cache( self, "getAt$key" ) {
+			UnoRuntime.queryInterface( XCellRange.class, self.getCellRangeByName( key ) )
 		}
-		spreadsheet[ key ].getCellByPosition( 0, 0 )
 	}
 
-	public static void setValue( XCellRange range, double value ) {
-		range.getCellByPosition( 0, 0 ).setValue( value )
+	public static XCell getCellAt( XSpreadsheet self, String key ) {
+		cache( self, "getCellAt$key" ) {
+			if ( key.contains( ':' ) ) {
+				throw new IllegalArgumentException( "Cannot specify a cell range, must be a single cell." )
+			}
+			self[ key ].getCellByPosition( 0, 0 )
+		}
 	}
 
-	public static double getValue( XCellRange range ) {
-		range.getCellByPosition( 0, 0 ).getValue()
+	public static XSheetAnnotationsSupplier getAnnotationSupplier( XSpreadsheet self ) {
+		cache( self, "getAnnotationSupplier" ) {
+			UnoRuntime.queryInterface( XSheetAnnotationsSupplier.class, self );
+		}
 	}
 
-	public static void setFormula( XCellRange range, String value ) {
-		range.getCellByPosition( 0, 0 ).setFormula( value )
+
+
+	// ========= XCellRange =========
+
+	public static void setValue( XCellRange self, double value ) {
+		self.getCellByPosition( 0, 0 ).setValue( value )
 	}
 
-	public static String getFormula( XCellRange range ) {
-		range.getCellByPosition( 0, 0 ).getFormula()
+	public static double getValue( XCellRange self ) {
+		self.getCellByPosition( 0, 0 ).getValue()
 	}
 
-	public static void leftShift( XCellRange range, double value ) {
-		CellRangeAddress address = range.address
+	public static void setFormula( XCellRange self, String value ) {
+		self.getCellByPosition( 0, 0 ).setFormula( value )
+	}
+
+	public static String getFormula( XCellRange self ) {
+		self.getCellByPosition( 0, 0 ).getFormula()
+	}
+
+	public static void leftShift( XCellRange self, double value ) {
+		CellRangeAddress address = self.address
 		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
 			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
-				range.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setValue( value )
+				self.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setValue( value )
 			}
 		}
 	}
 
-	public static void leftShift( XCell destCell, XCell sourceCell ) {
-		String formula = sourceCell.formula
-		if ( formula ) {
-			destCell.formula = formula
-		} else {
-			destCell.value = sourceCell.value
-		}
-	}
+	public static void leftShift( XCellRange self, XCellRange sourceRange ) {
 
-	public static void leftShift( XCellRange destRange, XCellRange sourceRange ) {
-
-		CellRangeAddress destAddress   = destRange.address
+		CellRangeAddress destAddress   = self.address
 		CellRangeAddress sourceAddress = sourceRange.address
 
 		int destColumns   = destAddress.EndColumn   - destAddress.StartColumn
@@ -102,100 +124,153 @@ class UnoExtension {
 		for ( int column = 0; column <= destColumns; column ++ ) {
 			for ( int row = 0; row <= destRows; row ++ ) {
 				XCell sourceCell = sourceRange.getCellByPosition( column, row )
-				XCell destCell   = destRange.getCellByPosition( column, row )
+				XCell destCell   = self.getCellByPosition( column, row )
 				destCell << sourceCell
 			}
 		}
 	}
 
-	public static void leftShift( XCellRange range, String formula ) {
-		CellRangeAddress address = range.address
+	public static void leftShift( XCellRange self, String formula ) {
+		CellRangeAddress address = self.address
 		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
 			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
-				range.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setFormula( formula )
+				self.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setFormula( formula )
 			}
 		}
 	}
 
-	public static XText getText( XCell cell ) {
-		UnoRuntime.queryInterface( XText.class, cell )
+	public static CellRangeAddress getAddress( XCellRange self ) {
+		cache( self, "getAddress" ) {
+			XCellRangeAddressable xAddr = UnoRuntime.queryInterface( XCellRangeAddressable.class, self )
+			xAddr.rangeAddress
+		}
 	}
 
-	public static CellRangeAddress getAddress( XCellRange range ) {
-		XCellRangeAddressable xAddr = UnoRuntime.queryInterface( XCellRangeAddressable.class, range )
-		xAddr.rangeAddress
+	public static XPropertySet getPropertySet( XCellRange self ) {
+		cache( self, "getPropertySet" ) {
+			UnoRuntime.queryInterface( XPropertySet.class, self )
+		}
 	}
 
-	public static XEnumerationAccess getEnumerationAccess( XCell cell ) {
-		UnoRuntime.queryInterface( XEnumerationAccess.class, cell );
+	public static XReplaceable getReplaceable( XCellRange self ) {
+		cache( self, "getReplaceable" ) {
+			UnoRuntime.queryInterface( XReplaceable.class, self );
+		}
 	}
 
-	public static XPropertySet getPropertySet( XCell cell ) {
-		UnoRuntime.queryInterface( XPropertySet.class, cell )
+	public static XMergeable getMergeable( XCellRange self ) {
+        cache( self, "getMergeable" ) {
+			UnoRuntime.queryInterface( XMergeable.class, self )
+		}
 	}
 
-	public static void putAt( XPropertySet propertySet, String key, Object value ) {
-		propertySet.setPropertyValue( key, value )
+	public static XColumnRowRange getColumnRowRange( XCellRange self ) {
+        cache( self, "getColumnRowRange" ) {
+			UnoRuntime.queryInterface( XColumnRowRange.class, self )
+		}
 	}
 
-	public static void getAt( XPropertySet propertySet, String key ) {
-		propertySet.getPropertyValue( key )
+	public static XTableColumns getColumns( XCellRange self ) {
+        self.columnRowRange.columns
 	}
 
-	public static XCellAddressable getAddressable( XCell cell ) {
-		UnoRuntime.queryInterface( XCellAddressable.class, cell )
+	public static XTableRows getRows( XCellRange self ) {
+        self.columnRowRange.rows
 	}
 
-	public static CellAddress getAddress( XCell cell ) {
-		cell.addressable.cellAddress
+	public static XCellRangeAddressable getCellRangeAddressable( XCellRange self ) {
+        cache( self, "getCellRangeAddressable" ) {
+			UnoRuntime.queryInterface( XCellRangeAddressable.class, self )
+		}
 	}
 
-	public static XSheetAnnotationsSupplier getAnnotationSupplier( XSpreadsheet sheet ) {
-		UnoRuntime.queryInterface( XSheetAnnotationsSupplier.class, sheet );
+
+
+	// ========= XCell =========
+
+	public static void leftShift( XCell self, XCell sourceCell ) {
+		String formula = sourceCell.formula
+		if ( formula ) {
+			self.formula = formula
+		} else {
+			self.value = sourceCell.value
+		}
 	}
 
-	public static XSheetAnnotationAnchor getSheetAnnotationAnchor( XCell cell ) {
-		UnoRuntime.queryInterface( XSheetAnnotationAnchor.class, cell )
+	public static XText getText( XCell self ) {
+		cache( self, "getText" ) {
+			UnoRuntime.queryInterface( XText.class, self )
+		}
 	}
 
-	public static XPropertySet getPropertySet( XCellRange range ) {
-		UnoRuntime.queryInterface( XPropertySet.class, range )
+	public static XEnumerationAccess getEnumerationAccess( XCell self ) {
+		cache( self, "getEnumerationAccess" ) {
+			UnoRuntime.queryInterface( XEnumerationAccess.class, self );
+		}
 	}
 
-	public static XReplaceable getReplaceable( XCellRange range ) {
-		UnoRuntime.queryInterface( XReplaceable.class, range );
+	public static XEnumerationAccess( XCell self ) {
+		self.getEnumerationAccess()
 	}
 
-	public static XMergeable getMergeable( XCellRange cellRange ) {
-        UnoRuntime.queryInterface( XMergeable.class, cellRange )
+	public static XPropertySet getPropertySet( XCell self ) {
+		cache( self, "getPropertySet" ) {
+			UnoRuntime.queryInterface( XPropertySet.class, self )
+		}
 	}
 
-	public static XColumnRowRange getColumnRowRange( XCellRange cellRange ) {
-        UnoRuntime.queryInterface( XColumnRowRange.class, cellRange )
+	public static XCellAddressable getAddressable( XCell self ) {
+		cache( self, "getAddressable" ) {
+			UnoRuntime.queryInterface( XCellAddressable.class, self )
+		}
 	}
 
-	public static XTableColumns getColumns( XCellRange cellRange ) {
-        cellRange.columnRowRange.columns
+	public static CellAddress getAddress( XCell self ) {
+		self.addressable.cellAddress
 	}
 
-	public static XTableRows getRows( XCellRange cellRange ) {
-        cellRange.columnRowRange.rows
+	public static XSheetAnnotationAnchor getSheetAnnotationAnchor( XCell self ) {
+		cache( self, "getSheetAnnotationAnchor" ) {
+			UnoRuntime.queryInterface( XSheetAnnotationAnchor.class, self )
+		}
 	}
 
-	public static XCellRangeAddressable getCellRangeAddressable( XCellRange cellRange ) {
-        UnoRuntime.queryInterface( XCellRangeAddressable.class, cellRange )
+
+
+	// ========= XPropertySet =========
+
+	public static void putAt( XPropertySet self, String key, Object value ) {
+		self.setPropertyValue( key, value )
 	}
 
-	public static Object getAt( XIndexAccess access, Integer index ) {
-		access.getByIndex( index )
+	public static void getAt( XPropertySet self, String key ) {
+		self.getPropertyValue( key )
 	}
 
-	public static XSheetOperation getSheetOperation( XCellRangeData data ) {
-        UnoRuntime.queryInterface( XSheetOperation.class, data );
+
+
+	// ========= XIndexAccess =========
+
+	public static Object getAt( XIndexAccess self, Integer index ) {
+		self.getByIndex( index )
 	}
 
-	public static void setSearchWords( XReplaceDescriptor replaceDescriptor, boolean value ) {
-        replaceDescriptor.setPropertyValue( "SearchWords", new Boolean( value ) );
+
+
+	// ========= XCellRangeData =========
+
+	public static XSheetOperation getSheetOperation( XCellRangeData self ) {
+        cache( self, "getSheetOperation" ) {
+			UnoRuntime.queryInterface( XSheetOperation.class, self );
+		}
+	}
+
+
+
+	// ========= XReplaceDescriptor =========
+
+	public static void setSearchWords( XReplaceDescriptor self, boolean value ) {
+        self.setPropertyValue( "SearchWords", new Boolean( value ) );
 	}
 
 }
