@@ -1,11 +1,14 @@
-package com.serwylo.gruno
+package com.serwylo.gruno.extension
 
+import com.serwylo.gruno.utils.DataUtils
 import com.sun.star.beans.XPropertySet
 import com.sun.star.container.XEnumerationAccess
 import com.sun.star.container.XIndexAccess
+import com.sun.star.sheet.XArrayFormulaRange
 import com.sun.star.sheet.XCellAddressable
 import com.sun.star.sheet.XCellRangeAddressable
 import com.sun.star.sheet.XCellRangeData
+import com.sun.star.sheet.XCellRangeFormula
 import com.sun.star.sheet.XSheetAnnotationAnchor
 import com.sun.star.sheet.XSheetAnnotationsSupplier
 import com.sun.star.sheet.XSheetOperation
@@ -78,9 +81,32 @@ class UnoExtension {
 		}
 	}
 
+	public static void clear( XCell self ) {
+		self << ""
+	}
+
 
 
 	// ========= XCellRange =========
+
+	/**
+	 * Iterates over each cell in the range (rows first, then columns).
+	 * @param self
+	 * @param closure Takes an XCell as its only parameter.
+	 */
+	public static void each( XCellRange self, Closure closure ) {
+		CellRangeAddress address = self.address
+		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
+			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
+				XCell cell = self.getCellByPosition( column - address.StartColumn, row - address.StartRow )
+				closure( cell )
+			}
+		}
+	}
+
+	public static void clear( XCellRange self ) {
+		self.operation.clearContents( 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096 )
+	}
 
 	public static void setValue( XCellRange self, double value ) {
 		self.getCellByPosition( 0, 0 ).setValue( value )
@@ -98,13 +124,38 @@ class UnoExtension {
 		self.getCellByPosition( 0, 0 ).getFormula()
 	}
 
-	public static void leftShift( XCellRange self, double value ) {
-		CellRangeAddress address = self.address
-		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
-			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
-				self.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setValue( value )
-			}
+	public static XCellRangeFormula getCellRangeFormula( XCellRange self ) {
+		cache( self, "getForumlaRange" ) {
+			UnoRuntime.queryInterface( XCellRangeFormula.class, self )
 		}
+	}
+
+	public static void setFormulas( XCellRange self, List<List<String>> formulas ) {
+		XCellRangeFormula rangeFormulas = self.cellRangeFormula
+		rangeFormulas.formulaArray = DataUtils.listsToArrays( formulas )
+	}
+
+	public static XCellRangeData getCellRangeData( XCellRange self ) {
+		cache( self, "getDataRange" ) {
+			UnoRuntime.queryInterface( XCellRangeData.class, self )
+		}
+	}
+
+	public static void setData( XCellRange self, Object[][] data ) {
+		XCellRangeData rangeData = self.cellRangeData
+		rangeData.dataArray = data
+	}
+
+	public static void leftShift( XCellRange self, List<List<Object>> data ) {
+		self.data = DataUtils.listsToArrays( data )
+	}
+
+	public static void leftShift( XCellRange self, double value ) {
+		self.data = DataUtils.valueToArrays( value, self )
+	}
+
+	public static void leftShift( XCellRange self, String string ) {
+		self.data = DataUtils.stringToArrays( string, self )
 	}
 
 	public static void leftShift( XCellRange self, XCellRange sourceRange ) {
@@ -126,15 +177,6 @@ class UnoExtension {
 				XCell sourceCell = sourceRange.getCellByPosition( column, row )
 				XCell destCell   = self.getCellByPosition( column, row )
 				destCell << sourceCell
-			}
-		}
-	}
-
-	public static void leftShift( XCellRange self, String formula ) {
-		CellRangeAddress address = self.address
-		for ( int column = address.StartColumn; column <= address.EndColumn; column ++ ) {
-			for ( int row = address.StartRow; row <= address.EndRow; row ++ ) {
-				self.getCellByPosition( column - address.StartColumn, row - address.StartRow ).setFormula( formula )
 			}
 		}
 	}
@@ -184,6 +226,28 @@ class UnoExtension {
 		}
 	}
 
+	public static XSheetOperation getSheetOperation( XCellRange self ) {
+        cache( self, "getSheetOperation" ) {
+			UnoRuntime.queryInterface( XSheetOperation.class, self );
+		}
+	}
+
+	public static XSheetOperation getOperation( XCellRange self ) {
+        self.sheetOperation
+	}
+
+	public static XCellRangeData getData( XCellRange self ) {
+        cache( self, "getData", ) {
+			UnoRuntime.queryInterface( XCellRangeData.class, self )
+		}
+	}
+
+	public static XArrayFormulaRange getFormulaRange( XCellRange self ) {
+        cache( self, "getFormulaRange", ) {
+			UnoRuntime.queryInterface( XArrayFormulaRange.class, self )
+		}
+	}
+
 
 
 	// ========= XCell =========
@@ -195,6 +259,14 @@ class UnoExtension {
 		} else {
 			self.value = sourceCell.value
 		}
+	}
+
+	public static void leftShift( XCell self, String formula ) {
+		self.formula = formula
+	}
+
+	public static void leftShift( XCell self, double value ) {
+		self.value = value
 	}
 
 	public static XText getText( XCell self ) {
@@ -255,6 +327,42 @@ class UnoExtension {
 		self.getByIndex( index )
 	}
 
+	/**
+	 * More specific version, which returns an XCellRange.
+	 * @param self
+	 * @param index
+	 * @return
+	 */
+	public static XCellRange getAt( XTableColumns self, Integer index ) {
+		cache( self, "getAt$index" ) {
+			UnoRuntime.queryInterface( XCellRange.class, self[ index ] )
+		}
+	}
+
+	/**
+	 * More specific version, which returns an XCellRange.
+	 * @param self
+	 * @param index
+	 * @return
+	 */
+	public static XCellRange getAt( XTableRows self, Integer index ) {
+		cache( self, "getAt$index" ) {
+			UnoRuntime.queryInterface( XCellRange.class, self[ index ] )
+		}
+	}
+
+
+
+	// ========= XTableRows/XTableColumns =========
+
+	public static void removeAt( XTableRows self, Integer index, Integer numRows = 1 ) {
+		self.removeByIndex( index, numRows )
+	}
+
+	public static void removeAt( XTableColumns self, Integer index, Integer numRows = 1 ) {
+		self.removeByIndex( index, numRows )
+	}
+
 
 
 	// ========= XCellRangeData =========
@@ -272,10 +380,5 @@ class UnoExtension {
 	public static void setSearchWords( XReplaceDescriptor self, boolean value ) {
         self.setPropertyValue( "SearchWords", new Boolean( value ) );
 	}
-
-}
-
-
-class UnoStaticExtension {
 
 }

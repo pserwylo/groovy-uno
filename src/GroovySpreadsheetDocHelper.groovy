@@ -35,11 +35,7 @@
 
 
 import com.serwylo.gruno.Connector
-import com.sun.star.comp.helper.Bootstrap
-import com.sun.star.frame.XComponentLoader
 import com.sun.star.lang.XMultiComponentFactory
-import com.sun.star.sheet.XCellAddressable
-import com.sun.star.sheet.XCellRangeAddressable
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
@@ -84,7 +80,7 @@ public class GroovySpreadsheetDocHelper
 
     /** Returns the service manager of the connected office.
         @return  XMultiComponentFactory interface of the service manager. */
-    public XMultiComponentFactory getServiceManager() { connector.serviceManager }
+    public XMultiComponentFactory getServiceManager() { connector.componentFactory }
 
     /** Returns the component context of the connected office
         @return  XComponentContext interface of the context. */

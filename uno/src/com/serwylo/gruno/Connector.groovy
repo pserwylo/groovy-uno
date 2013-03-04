@@ -3,35 +3,38 @@ package com.serwylo.gruno
 import com.sun.star.comp.helper.Bootstrap
 import com.sun.star.frame.XComponentLoader
 import com.sun.star.lang.XMultiComponentFactory
-import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.uno.UnoRuntime
 import com.sun.star.uno.XComponentContext
 
 class Connector {
 
-	private boolean hasConnected = false
+	private static boolean hasConnected = false
 
-	private XComponentContext remoteContext
-    private XMultiComponentFactory  remoteServiceManager
-	private XComponentLoader loader
+	private static XComponentContext context
+    private static XMultiComponentFactory componentFactory
+	private static XComponentLoader loader
 
-	public boolean connect() {
+	private static boolean connect() {
 		if ( !hasConnected ) {
             try {
-                remoteContext = Bootstrap.bootstrap()
-                remoteServiceManager = remoteContext.serviceManager
+                context = Bootstrap.bootstrap()
+                componentFactory = context.serviceManager
 				hasConnected = true
             } catch( Exception e ) {}
         }
 		return hasConnected
 	}
 
-	public XComponentContext getContext() {
-		remoteContext
+	protected Connector() {
+		connect()
 	}
 
-	public XMultiComponentFactory getServiceManager() {
-		remoteServiceManager
+	public XComponentContext getContext() {
+		context
+	}
+
+	public XMultiComponentFactory getComponentFactory() {
+		componentFactory
 	}
 
 	protected String generateNewUrl( String component ) {
@@ -42,9 +45,9 @@ class Connector {
 		if ( loader == null ) {
 			loader = UnoRuntime.queryInterface(
 				XComponentLoader.class,
-				remoteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", remoteContext))
+				componentFactory.createInstanceWithContext("com.sun.star.frame.Desktop", context))
 		}
-		loader
+		return loader
 	}
 
 }

@@ -8,6 +8,10 @@ import com.sun.star.beans.PropertyValue
 
 class SpreadsheetConnector extends Connector {
 
+	public SpreadsheetConnector() {
+		super()
+	}
+
 	public XSpreadsheetDocument open() {
 		openSpreadsheet( generateNewUrl( "scalc" ) )
 	}

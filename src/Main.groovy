@@ -1,18 +1,53 @@
 import com.serwylo.gruno.spreadsheet.SpreadsheetConnector
+import com.serwylo.gruno.utils.Introspector
+import com.sun.star.sheet.XCellRangeData
+import com.sun.star.table.XCellRange
+import com.sun.star.beans.XIntrospection;
 
-SpreadsheetConnector connector = new SpreadsheetConnector()
-connector.connect()
+def spreadsheetProgram = new SpreadsheetConnector()
 
-def doc1 = connector.open()
-def sheet1 = doc1.sheets[ 0 ]
+def doc1 = spreadsheetProgram.open()
 
-long time = System.currentTimeMillis()
+def sheet = doc1.sheets[ 0 ]
 
-for ( def i = 0; i < 1000; i ++ ) {
-	sheet1[ "A1" ] << i
+def size = 250000;
+def numbers = 1..size
+
+print "Adding random values... "
+[ 'A', 'B' ].each {
+	List<List<Object>> data = numbers.collect { [ Math.random() * 100 ] }
+	sheet[ "${it}1:$it$size" ] << data
 }
+println "done!"
 
-println System.currentTimeMillis() - time
+println "Adding const values... "
+sheet[ "C1:C$size" ] << 3
+println "done!"
+
+println "Adding const strings... "
+sheet[ "D1:D$size" ] << "Total:"
+println "done!"
+
+print "Adding sums... "
+sheet[ "E1:E$size" ].formulas = numbers.collect { [ "=SUM(A$it:C$it" ] }
+println "Done!"
+
+/*
+print "Adding more random values... "
+sheet[ "B1:B200000" ] << Math.random() * 10
+println "Done!"
+
+print "Summing... "
+for ( int i = 0; i < 200000; i ++ ) {
+	sheet[ "C$i" ].formula = "=SUM(A$i:B$i)"
+	if ( i % 10000 ) {
+		println " $i"
+	}
+}
+println "Done!"
+
+sleep 1000
+*/
 
 System.exit( 0 )
 
