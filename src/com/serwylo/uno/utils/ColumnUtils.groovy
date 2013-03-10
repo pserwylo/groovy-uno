@@ -1,4 +1,4 @@
-package com.serwylo.gruno.utils
+package com.serwylo.uno.utils
 
 
 class ColumnUtils {

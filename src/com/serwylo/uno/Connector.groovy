@@ -1,4 +1,4 @@
-package com.serwylo.gruno
+package com.serwylo.uno
 
 import com.sun.star.comp.helper.Bootstrap
 import com.sun.star.frame.XComponentLoader

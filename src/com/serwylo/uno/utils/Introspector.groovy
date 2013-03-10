@@ -1,6 +1,6 @@
-package com.serwylo.gruno.utils
+package com.serwylo.uno.utils
 
-import com.serwylo.gruno.Connector
+import com.serwylo.uno.Connector
 import com.sun.star.beans.XIntrospection
 import com.sun.star.uno.UnoRuntime
 

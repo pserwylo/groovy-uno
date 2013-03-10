@@ -1,6 +1,6 @@
-package com.serwylo.gruno.extension
+package com.serwylo.uno.extension
 
-import com.serwylo.gruno.utils.DataUtils
+import com.serwylo.uno.utils.DataUtils
 import com.sun.star.beans.XPropertySet
 import com.sun.star.container.XEnumerationAccess
 import com.sun.star.container.XIndexAccess
@@ -63,6 +63,12 @@ class UnoExtension {
 	public static XCellRange getAt( XSpreadsheet self, String key ) {
 		cache( self, "getAt$key" ) {
 			UnoRuntime.queryInterface( XCellRange.class, self.getCellRangeByName( key ) )
+		}
+	}
+
+	public static XCellRange getCells( XSpreadsheet self ) {
+		cache( self, "getCells" ) {
+			UnoRuntime.queryInterface( XCellRange.class, self )
 		}
 	}
 

@@ -1,6 +1,7 @@
-package com.serwylo.gruno.spreadsheet
+package com.serwylo.uno.spreadsheet
 
-import com.serwylo.gruno.Connector
+import com.serwylo.uno.Connector
+import com.sun.star.frame.FrameSearchFlag
 import com.sun.star.lang.XComponent
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.uno.UnoRuntime
@@ -17,7 +18,13 @@ class SpreadsheetConnector extends Connector {
 	}
 
 	public XSpreadsheetDocument open( String filename, CsvOptions options ) {
-		openSpreadsheet( filename )
+		PropertyValue[] properties = null
+		if ( options ) {
+			properties = new PropertyValue[ 2 ]
+			properties[ 0 ] = options.propertyFilterName
+			properties[ 1 ] = options.propertyFilterOptions
+		}
+		openSpreadsheet( filename, properties )
 	}
 
 	public XSpreadsheetDocument open( String path ) {
@@ -28,7 +35,13 @@ class SpreadsheetConnector extends Connector {
 		if ( properties == null ) {
 			properties = new PropertyValue[0]
 		}
-		XComponent component = loader.loadComponentFromURL( path, "_blank", 0, properties )
+
+		if ( path ) {
+			path = new File( path ).absolutePath
+			path = "file://$path"
+		}
+
+		XComponent component = loader.loadComponentFromURL( path, "_blank", FrameSearchFlag.ALL, properties )
 		componentToSpreadsheetDocument( component )
 	}
 

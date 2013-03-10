@@ -1,4 +1,4 @@
-package com.serwylo.gruno.utils
+package com.serwylo.uno.utils
 
 import com.sun.star.table.CellRangeAddress
 import com.sun.star.table.XCellRange
@@ -9,7 +9,14 @@ class DataUtils {
 	public static Object[][] listsToArrays( List<List<Object>> lists ) {
 		Object[][] arrays = new Object[ lists.size() ][]
 		for ( int i in 0..( lists.size() - 1 ) ) {
-			arrays[ i ] = lists[ i ].toArray()
+			Object[] row
+			if ( lists[ i ] instanceof List ) {
+				row = lists[ i ].toArray()
+			} else {
+				row = new Object[ 1 ]
+				row[ 0 ] = lists[ i ]
+			}
+			arrays[ i ] = row
 		}
 		return arrays
 	}

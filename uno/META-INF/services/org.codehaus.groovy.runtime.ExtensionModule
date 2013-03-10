@@ -1,4 +1,0 @@
-moduleName=groovy-uno
-moduleVersion=0.1
-extensionClasses=com.serwylo.gruno.extension.UnoExtension
-staticExtensionClasses=com.serwylo.gruno.extension.UnoStaticExtension

@@ -32,38 +32,31 @@
  *
  *************************************************************************/
 
-import com.sun.star.comp.servicemanager.ServiceManager;
-import com.sun.star.bridge.XUnoUrlResolver;
-import com.sun.star.uno.XNamingService;
-import com.sun.star.frame.XDesktop;
-import com.sun.star.frame.XComponentLoader;
-import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.lang.XComponent;
 
-import com.sun.star.uno.UnoRuntime;
+
+import com.serwylo.uno.Connector
+import com.sun.star.lang.XMultiComponentFactory
+import com.sun.star.sheet.XSpreadsheet
+import com.sun.star.sheet.XSpreadsheetDocument
+import com.sun.star.sheet.XSpreadsheets
+import com.sun.star.table.CellAddress
+import com.sun.star.table.CellRangeAddress
 import com.sun.star.uno.RuntimeException;
-
-// __________  implementation  ____________________________________
+import com.sun.star.uno.UnoRuntime
+import com.sun.star.uno.XComponentContext;
 
 /** This is a helper class for the spreadsheet and table samples.
     It connects to a running office and creates a spreadsheet document.
     Additionally it contains various helper functions.
  */
-public class SpreadsheetDocHelper
+public class GroovySpreadsheetDocHelper
 {
 
-// __  private members  ___________________________________________
+	private Connector connector = new Connector()
 
-    private final String  msDataSheetName  = "Data";
+    private XSpreadsheetDocument document;
 
-    private com.sun.star.uno.XComponentContext  mxRemoteContext;
-    private com.sun.star.lang.XMultiComponentFactory  mxRemoteServiceManager;
-//    private com.sun.star.lang.XMultiServiceFactory  mxMSFactory;
-    private com.sun.star.sheet.XSpreadsheetDocument mxDocument;
-
-// ________________________________________________________________
-
-    public SpreadsheetDocHelper( String[] args )
+    public GroovySpreadsheetDocHelper( String[] args )
     {
         // Connect to a running office and get the service manager
         connect();
@@ -71,7 +64,7 @@ public class SpreadsheetDocHelper
         // Create a new spreadsheet document
         try
         {
-            mxDocument = initDocument();
+            document = initDocument();
         }
         catch (Exception ex)
         {
@@ -87,74 +80,33 @@ public class SpreadsheetDocHelper
 
     /** Returns the service manager of the connected office.
         @return  XMultiComponentFactory interface of the service manager. */
-    public com.sun.star.lang.XMultiComponentFactory getServiceManager()
-    {
-        return mxRemoteServiceManager;
-    }
+    public XMultiComponentFactory getServiceManager() { connector.componentFactory }
 
     /** Returns the component context of the connected office
         @return  XComponentContext interface of the context. */
-    public com.sun.star.uno.XComponentContext getContext()
-    {
-        return mxRemoteContext;
-    }
+    public XComponentContext getContext() { connector.context }
 
     /** Returns the whole spreadsheet document.
         @return  XSpreadsheetDocument interface of the document. */
-    public com.sun.star.sheet.XSpreadsheetDocument getDocument()
-    {
-        return mxDocument;
-    }
-
-    /** Returns the spreadsheet with the specified index (0-based).
-        @param nIndex  The index of the sheet.
-        @return  XSpreadsheet interface of the sheet. */
-    public com.sun.star.sheet.XSpreadsheet getSpreadsheet( int nIndex )
-    {
-        // Collection of sheets
-        com.sun.star.sheet.XSpreadsheets xSheets = mxDocument.getSheets();
-        com.sun.star.sheet.XSpreadsheet xSheet = null;
-        try
-        {
-            com.sun.star.container.XIndexAccess xSheetsIA =
-                (com.sun.star.container.XIndexAccess)UnoRuntime.queryInterface(
-                    com.sun.star.container.XIndexAccess.class, xSheets );
-            xSheet = (com.sun.star.sheet.XSpreadsheet) UnoRuntime.queryInterface(
-               com.sun.star.sheet.XSpreadsheet.class, xSheetsIA.getByIndex(nIndex));
-        }
-        catch (Exception ex)
-        {
-            System.err.println( "Error: caught exception in getSpreadsheet()!\nException Message = "
-                                + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return xSheet;
-    }
+    public XSpreadsheetDocument getDocument() { document }
 
     /** Inserts a new empty spreadsheet with the specified name.
         @param aName  The name of the new sheet.
         @param nIndex  The insertion index.
         @return  The XSpreadsheet interface of the new sheet. */
-    public com.sun.star.sheet.XSpreadsheet insertSpreadsheet(
-        String aName, short nIndex )
+    public XSpreadsheet insertSpreadsheet( String aName, short nIndex )
     {
         // Collection of sheets
-        com.sun.star.sheet.XSpreadsheets xSheets = mxDocument.getSheets();
-        com.sun.star.sheet.XSpreadsheet xSheet = null;
-        try
-        {
-            xSheets.insertNewByName( aName, nIndex );
-            xSheet = (com.sun.star.sheet.XSpreadsheet)
-                UnoRuntime.queryInterface(com.sun.star.sheet.XSpreadsheet.class,
-                                          xSheets.getByName( aName ));
+        XSpreadsheets xSheets = document.sheets
+        XSpreadsheet xSheet = null
+        try {
+            xSheets.insertNewByName( aName, nIndex )
+            xSheet = xSheets[ aName ]
+        } catch ( Exception ex ) {
+            println "Error: caught exception in insertSpreadsheet()!\nException Message = $ex.message"
+            ex.printStackTrace()
         }
-        catch (Exception ex)
-        {
-            System.err.println( "Error: caught exception in insertSpreadsheet()!\nException Message = "
-                                + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return xSheet;
+        return xSheet
     }
 
 // ________________________________________________________________
@@ -165,11 +117,11 @@ public class SpreadsheetDocHelper
         @param aCellName  The address of the cell (or a named range).
         @param fValue  The value to write into the cell. */
     public void setValue(
-            com.sun.star.sheet.XSpreadsheet xSheet,
-            String aCellName,
-            double fValue ) throws RuntimeException, Exception
+		XSpreadsheet xSheet,
+		String aCellName,
+		double fValue ) throws RuntimeException, Exception
     {
-        xSheet.getCellRangeByName( aCellName ).getCellByPosition( 0, 0 ).setValue( fValue );
+        xSheet[ aCellName ].value = fValue;
     }
 
     /** Writes a formula into a spreadsheet.
@@ -181,7 +133,7 @@ public class SpreadsheetDocHelper
             String aCellName,
             String aFormula ) throws RuntimeException, Exception
     {
-        xSheet.getCellRangeByName( aCellName ).getCellByPosition( 0, 0 ).setFormula( aFormula );
+        xSheet[ aCellName ].formula = aFormula
     }
 
     /** Writes a date with standard date format into a spreadsheet.
@@ -210,7 +162,7 @@ public class SpreadsheetDocHelper
         int nFormat = xFormatTypes.getStandardFormat(
             com.sun.star.util.NumberFormat.DATE, new com.sun.star.lang.Locale() );
 
-        com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet)
+        com.sun.star.beans.XPropertySet xPropSet =
             UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCell );
         xPropSet.setPropertyValue( "NumberFormat", new Integer( nFormat ) );
     }
@@ -229,8 +181,7 @@ public class SpreadsheetDocHelper
 
         // draw border
         xCellRange = xSheet.getCellRangeByName( aRange );
-        xPropSet = (com.sun.star.beans.XPropertySet)
-            UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCellRange );
+        xPropSet = UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCellRange );
         com.sun.star.table.BorderLine aLine = new com.sun.star.table.BorderLine();
         aLine.Color = 0x99CCFF;
         aLine.InnerLineWidth = aLine.LineDistance = 0;
@@ -242,19 +193,19 @@ public class SpreadsheetDocHelper
         xPropSet.setPropertyValue( "TableBorder", aBorder );
 
         // draw headline
-        com.sun.star.sheet.XCellRangeAddressable xAddr = (com.sun.star.sheet.XCellRangeAddressable)
+        com.sun.star.sheet.XCellRangeAddressable xAddr =
             UnoRuntime.queryInterface( com.sun.star.sheet.XCellRangeAddressable.class, xCellRange );
         com.sun.star.table.CellRangeAddress aAddr = xAddr.getRangeAddress();
 
         xCellRange = xSheet.getCellRangeByPosition(
             aAddr.StartColumn, aAddr.StartRow, aAddr.EndColumn, aAddr.StartRow );
-        xPropSet = (com.sun.star.beans.XPropertySet)
+        xPropSet =
             UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCellRange );
         xPropSet.setPropertyValue( "CellBackColor", new Integer( 0x99CCFF ) );
         // write headline
         com.sun.star.table.XCell xCell = xCellRange.getCellByPosition( 0, 0 );
         xCell.setFormula( aHeadline );
-        xPropSet = (com.sun.star.beans.XPropertySet)
+        xPropSet =
             UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCell );
         xPropSet.setPropertyValue( "CharColor", new Integer( 0x003399 ) );
         xPropSet.setPropertyValue( "CharWeight", new Float( com.sun.star.awt.FontWeight.BOLD ) );
@@ -267,27 +218,16 @@ public class SpreadsheetDocHelper
         with the given range.
         @param xSheet  The XSpreadsheet interface of the spreadsheet.
         @param aCell  The address of the cell (or a named cell). */
-    public com.sun.star.table.CellAddress createCellAddress(
-            com.sun.star.sheet.XSpreadsheet xSheet,
-            String aCell ) throws RuntimeException, Exception
-    {
-        com.sun.star.sheet.XCellAddressable xAddr = (com.sun.star.sheet.XCellAddressable)
-            UnoRuntime.queryInterface( com.sun.star.sheet.XCellAddressable.class,
-                xSheet.getCellRangeByName( aCell ).getCellByPosition( 0, 0 ) );
-        return xAddr.getCellAddress();
+    public CellAddress createCellAddress( XSpreadsheet xSheet, String aCell ) throws RuntimeException, Exception {
+        xSheet.getCellAt( aCell ).address;
     }
 
     /** Creates a com.sun.star.table.CellRangeAddress and initializes
         it with the given range.
         @param xSheet  The XSpreadsheet interface of the spreadsheet.
         @param aRange  The address of the cell range (or a named range). */
-    public com.sun.star.table.CellRangeAddress createCellRangeAddress(
-            com.sun.star.sheet.XSpreadsheet xSheet, String aRange )
-    {
-        com.sun.star.sheet.XCellRangeAddressable xAddr = (com.sun.star.sheet.XCellRangeAddressable)
-            UnoRuntime.queryInterface( com.sun.star.sheet.XCellRangeAddressable.class,
-                xSheet.getCellRangeByName( aRange ) );
-        return xAddr.getRangeAddress();
+    public CellRangeAddress createCellRangeAddress( XSpreadsheet xSheet, String aRange ) {
+        xSheet[ aRange ].address
     }
 
 // ________________________________________________________________
@@ -302,7 +242,7 @@ public class SpreadsheetDocHelper
         String aStr = "";
         if (nColumn > 25)
             aStr += (char) ('A' + nColumn / 26 - 1);
-        aStr += (char) ('A' + nColumn % 26);
+        aStr += ('A' + nColumn % 26);
         aStr += (nRow + 1);
         return aStr;
     }
@@ -313,10 +253,9 @@ public class SpreadsheetDocHelper
     public String getCellRangeAddressString(
             com.sun.star.table.CellRangeAddress aCellRange )
     {
-        return
-            getCellAddressString( aCellRange.StartColumn, aCellRange.StartRow )
-            + ":"
-            + getCellAddressString( aCellRange.EndColumn, aCellRange.EndRow );
+		def start = getCellAddressString( aCellRange.StartColumn, aCellRange.StartRow )
+		def end   = getCellAddressString( aCellRange.EndColumn, aCellRange.EndRow );
+        return "$start:$end"
     }
 
     /** Returns the text address of the cell range.
@@ -331,11 +270,11 @@ public class SpreadsheetDocHelper
         if (bWithSheet)
         {
             com.sun.star.sheet.XSpreadsheet xSheet = xCellRange.getSpreadsheet();
-            com.sun.star.container.XNamed xNamed = (com.sun.star.container.XNamed)
+            com.sun.star.container.XNamed xNamed =
                 UnoRuntime.queryInterface( com.sun.star.container.XNamed.class, xSheet );
             aStr += xNamed.getName() + ".";
         }
-        com.sun.star.sheet.XCellRangeAddressable xAddr = (com.sun.star.sheet.XCellRangeAddressable)
+        com.sun.star.sheet.XCellRangeAddressable xAddr =
             UnoRuntime.queryInterface( com.sun.star.sheet.XCellRangeAddressable.class, xCellRange );
         aStr += getCellRangeAddressString( xAddr.getRangeAddress() );
         return aStr;
@@ -354,7 +293,7 @@ public class SpreadsheetDocHelper
             if (nIndex > 0)
                 aStr += " ";
             Object aRangeObj = xRangesIA.getByIndex( nIndex );
-            com.sun.star.sheet.XSheetCellRange xCellRange = (com.sun.star.sheet.XSheetCellRange)
+            com.sun.star.sheet.XSheetCellRange xCellRange =
                 UnoRuntime.queryInterface( com.sun.star.sheet.XSheetCellRange.class, aRangeObj );
             aStr += getCellRangeAddressString( xCellRange, false );
         }
@@ -364,41 +303,14 @@ public class SpreadsheetDocHelper
 // ________________________________________________________________
 
     // Connect to a running office that is accepting connections.
-    private void connect()
-    {
-        if (mxRemoteContext == null && mxRemoteServiceManager == null) {
-            try {
-                // First step: get the remote office component context
-                mxRemoteContext = com.sun.star.comp.helper.Bootstrap.bootstrap();
-                System.out.println("Connected to a running office ...");
-
-                mxRemoteServiceManager = mxRemoteContext.getServiceManager();
-            }
-            catch( Exception e) {
-                System.err.println("ERROR: can't get a component context from a running office ...");
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+    private void connect() {
+		connector.connect()
     }
 
     /** Creates an empty spreadsheet document.
         @return  The XSpreadsheetDocument interface of the document. */
-    private com.sun.star.sheet.XSpreadsheetDocument initDocument()
-            throws RuntimeException, Exception
-    {
-        XComponentLoader aLoader = (XComponentLoader)
-            UnoRuntime.queryInterface(
-                XComponentLoader.class,
-                mxRemoteServiceManager.createInstanceWithContext(
-                    "com.sun.star.frame.Desktop", mxRemoteContext));
-
-        XComponent xComponent = aLoader.loadComponentFromURL(
-            "private:factory/scalc", "_blank", 0,
-            new com.sun.star.beans.PropertyValue[0] );
-
-        return (com.sun.star.sheet.XSpreadsheetDocument)UnoRuntime.queryInterface(
-            com.sun.star.sheet.XSpreadsheetDocument.class, xComponent );
+    private XSpreadsheetDocument initDocument() throws RuntimeException, Exception {
+       	connector.loadSpreadsheet()
     }
 
 // ________________________________________________________________
