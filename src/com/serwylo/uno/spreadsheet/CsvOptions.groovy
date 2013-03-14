@@ -1,5 +1,6 @@
 package com.serwylo.uno.spreadsheet
 
+import com.serwylo.uno.DocumentOptions
 import com.sun.star.beans.PropertyValue
 
 /**
@@ -7,7 +8,7 @@ import com.sun.star.beans.PropertyValue
  * http://forum.openoffice.org/en/forum/viewtopic.php?f=44&t=14018&p=65702&hilit=showfilteroptions
  * @see com/sun/star/document/MediaDescriptor.html
  */
-class CsvOptions {
+class CsvOptions extends DocumentOptions {
 
 	private filterName = "Text - txt - csv (StarCalc)"
 
@@ -26,10 +27,10 @@ class CsvOptions {
 	 *
 	 */
 
-	static final char TAB       = "\t"
-	static final char COMMA     = ","
-	static final char SEMICOLON = ";"
-	static final char SPACE     = " "
+	static final String TAB       = "\t"
+	static final String COMMA     = ","
+	static final String SEMICOLON = ";"
+	static final String SPACE     = " "
 
 	static final char DOUBLE_QUOTE = '"'
 	static final char SINGLE_QUOTE = "'"
@@ -39,16 +40,23 @@ class CsvOptions {
 	boolean mergeDelimiters      = false
 
 	Character textDelimiter      = DOUBLE_QUOTE
-	String fieldDelimiters       = TAB
+	String fieldDelimiters       = COMMA
 
 	int startLine                = 0
 
-	PropertyValue getPropertyFilterName() {
+	protected PropertyValue getPropertyFilterName() {
 		new PropertyValue( Name: "FilterName", Value: "Text - txt - csv (StarCalc)" )
 	}
 
-	PropertyValue getPropertyFilterOptions() {
+	protected PropertyValue getPropertyFilterOptions() {
 		new PropertyValue( Name: "FilterOptions", Value: toString() )
+	}
+
+	protected List<PropertyValue> getAdditionalProperties() {
+		[
+			propertyFilterName,
+			propertyFilterOptions
+		]
 	}
 
 	String toString() {

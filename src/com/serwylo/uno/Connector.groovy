@@ -14,6 +14,8 @@ class Connector {
     private static XMultiComponentFactory componentFactory
 	private static XComponentLoader loader
 
+	private static String NEW_PREFIX = "private:factory/"
+
 	private static boolean connect() {
 		if ( !hasConnected ) {
             try {
@@ -38,7 +40,21 @@ class Connector {
 	}
 
 	protected String generateNewUrl( String component ) {
-		return "private:factory/$component"
+		"$NEW_PREFIX$component"
+	}
+
+	protected Boolean isNewUrl( String path ) {
+		path.startsWith( NEW_PREFIX )
+	}
+
+	protected String sanitizePath( String path ) {
+		if ( !isNewUrl( path ) ) {
+			if ( !path.startsWith( "file://" ) ) {
+				path = new File( path ).absolutePath
+				path = "file://$path"
+			}
+		}
+		return path
 	}
 
 	protected XComponentLoader getLoader() {

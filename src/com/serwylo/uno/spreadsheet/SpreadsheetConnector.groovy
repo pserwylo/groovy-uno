@@ -1,7 +1,9 @@
 package com.serwylo.uno.spreadsheet
 
 import com.serwylo.uno.Connector
+import com.serwylo.uno.DocumentOptions
 import com.sun.star.frame.FrameSearchFlag
+import com.sun.star.frame.XStorable
 import com.sun.star.lang.XComponent
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.uno.UnoRuntime
@@ -17,32 +19,30 @@ class SpreadsheetConnector extends Connector {
 		openSpreadsheet( generateNewUrl( "scalc" ) )
 	}
 
-	public XSpreadsheetDocument open( String filename, CsvOptions options ) {
-		PropertyValue[] properties = null
-		if ( options ) {
-			properties = new PropertyValue[ 2 ]
-			properties[ 0 ] = options.propertyFilterName
-			properties[ 1 ] = options.propertyFilterOptions
-		}
-		openSpreadsheet( filename, properties )
-	}
-
-	public XSpreadsheetDocument open( String path ) {
-		openSpreadsheet( path )
+	public XSpreadsheetDocument open( String filename, DocumentOptions options = null ) {
+		openSpreadsheet( filename, options?.properties )
 	}
 
 	protected XSpreadsheetDocument openSpreadsheet( String path, PropertyValue[] properties = null ) {
 		if ( properties == null ) {
 			properties = new PropertyValue[0]
 		}
-
-		if ( path ) {
-			path = new File( path ).absolutePath
-			path = "file://$path"
-		}
-
+		path = sanitizePath( path )
 		XComponent component = loader.loadComponentFromURL( path, "_blank", FrameSearchFlag.ALL, properties )
 		componentToSpreadsheetDocument( component )
+	}
+
+	public void save( XSpreadsheetDocument document, String path, DocumentOptions options = null ) {
+		saveSpreadsheet( document, path, options?.properties )
+	}
+
+	protected void saveSpreadsheet( XSpreadsheetDocument document, String path, PropertyValue[] properties = null ) {
+		if ( properties == null ) {
+			properties = new PropertyValue[0]
+		}
+		path = sanitizePath( path )
+		XStorable store = UnoRuntime.queryInterface( XStorable.class, document )
+		store.storeAsURL( path, properties )
 	}
 
 	private XSpreadsheetDocument componentToSpreadsheetDocument( XComponent component ) {

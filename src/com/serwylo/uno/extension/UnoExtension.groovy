@@ -4,6 +4,8 @@ import com.serwylo.uno.utils.DataUtils
 import com.sun.star.beans.XPropertySet
 import com.sun.star.container.XEnumerationAccess
 import com.sun.star.container.XIndexAccess
+import com.sun.star.lang.XComponent
+import com.sun.star.sdbc.XCloseable
 import com.sun.star.sheet.XArrayFormulaRange
 import com.sun.star.sheet.XCellAddressable
 import com.sun.star.sheet.XCellRangeAddressable
@@ -13,6 +15,7 @@ import com.sun.star.sheet.XSheetAnnotationAnchor
 import com.sun.star.sheet.XSheetAnnotationsSupplier
 import com.sun.star.sheet.XSheetOperation
 import com.sun.star.sheet.XSpreadsheet
+import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
 import com.sun.star.table.CellAddress
 import com.sun.star.table.CellRangeAddress
@@ -23,6 +26,7 @@ import com.sun.star.table.XTableColumns
 import com.sun.star.table.XTableRows
 import com.sun.star.text.XText
 import com.sun.star.uno.UnoRuntime
+import com.sun.star.util.CloseVetoException
 import com.sun.star.util.XMergeable
 import com.sun.star.util.XReplaceDescriptor
 import com.sun.star.util.XReplaceable
@@ -45,20 +49,67 @@ class UnoExtension {
 	}
 
 
+	private static XComponent spreadsheetDocumentToComponent( XSpreadsheetDocument doc ) {
+		cache( doc, "spreadsheetComponent" ) {
+			UnoRuntime.queryInterface( XComponent.class, doc )
+		}
+	}
+
+
+	// ========= XSpreadsheetDocument =========
+
+	public static boolean close( XSpreadsheetDocument self ) {
+		XCloseable closeable = UnoRuntime.queryInterface( XCloseable.class, self )
+		boolean success = false
+		if ( closeable ) {
+			try {
+				closeable.close()
+				success = true
+			} catch ( CloseVetoException e ) {
+				success = false
+			}
+		} else {
+			XComponent component = spreadsheetDocumentToComponent( self )
+			component.dispose()
+			success = true
+		}
+		return success
+	}
+
+
+	public static XSpreadsheet getAt( XSpreadsheetDocument self, int index ) {
+		self.getSheets().getAt( index )
+	}
+
+
+
 	// ========= XSpreadsheets =========
 
 	public static XSpreadsheet getAt( XSpreadsheets self, int index ) {
-		XIndexAccess xSheetsIA = UnoRuntime.queryInterface( XIndexAccess.class, self )
-		UnoRuntime.queryInterface( XSpreadsheet.class, xSheetsIA.getByIndex( index ) )
+		XIndexAccess xSheetsIA = cache( self, "indexAccess$index" ) {
+			UnoRuntime.queryInterface( XIndexAccess.class, self )
+		}
+
+		cache( self, "getAt$index" ) {
+			UnoRuntime.queryInterface( XSpreadsheet.class, xSheetsIA.getByIndex( index ) )
+		}
 	}
 
 	public static XSpreadsheet getAt( XSpreadsheets self, String key ) {
-		UnoRuntime.queryInterface( XSpreadsheet.class, self.getByName( key ) )
+		cache( self, "getAt$key" ) {
+			UnoRuntime.queryInterface( XSpreadsheet.class, self.getByName( key ) )
+		}
 	}
 
 
 
 	// ========= XSpreadsheet =========
+
+	public static XCellRange toCellRange( XSpreadsheet self ) {
+		cache( self, "toCellRange" ) {
+			UnoRuntime.queryInterface( XCellRange.class, self )
+		}
+	}
 
 	public static XCellRange getAt( XSpreadsheet self, String key ) {
 		cache( self, "getAt$key" ) {
@@ -78,6 +129,18 @@ class UnoExtension {
 				throw new IllegalArgumentException( "Cannot specify a cell range, must be a single cell." )
 			}
 			self[ key ].getCellByPosition( 0, 0 )
+		}
+	}
+
+	public static XCell getAt( XSpreadsheet self, int column, int row ) {
+		cache( self, "getAt$column,$row" ) {
+			self.getCellByPosition( column, row )
+		}
+	}
+
+	public static XCellRange getAt( XSpreadsheet self, int column ) {
+		cache( self, "getAt$column" ) {
+			self.toCellRange().columns[ column ]
 		}
 	}
 
@@ -333,6 +396,11 @@ class UnoExtension {
 		self.getByIndex( index )
 	}
 
+
+	public static int size( XIndexAccess self ) {
+		self.getCount()
+	}
+
 	/**
 	 * More specific version, which returns an XCellRange.
 	 * @param self
@@ -341,7 +409,7 @@ class UnoExtension {
 	 */
 	public static XCellRange getAt( XTableColumns self, Integer index ) {
 		cache( self, "getAt$index" ) {
-			UnoRuntime.queryInterface( XCellRange.class, self[ index ] )
+			UnoRuntime.queryInterface( XCellRange.class, self.getByIndex( index ) )
 		}
 	}
 
@@ -353,7 +421,7 @@ class UnoExtension {
 	 */
 	public static XCellRange getAt( XTableRows self, Integer index ) {
 		cache( self, "getAt$index" ) {
-			UnoRuntime.queryInterface( XCellRange.class, self[ index ] )
+			UnoRuntime.queryInterface( XCellRange.class, self.getByIndex( index ) )
 		}
 	}
 

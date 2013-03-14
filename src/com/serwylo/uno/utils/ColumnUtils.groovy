@@ -1,12 +1,30 @@
 package com.serwylo.uno.utils
 
-
+/**
+ * http://www.blackbeltcoder.com/Articles/strings/converting-between-integers-and-spreadsheet-column-labels
+ */
 class ColumnUtils {
 
-	public static Integer columnNameToIndex( String name ) throws IllegalArgumentException {
+	private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	public static String indexToName( int index ) throws IllegalArgumentException {
+		StringBuilder builder = new StringBuilder()
+		boolean keepGoing = true
+		while( keepGoing )
+		{
+			if ( builder.size() > 0 )
+				index --
+			builder.append( ALPHA[ index % ALPHA.size() ] )
+			index /= ALPHA.size();
+			keepGoing = ( index > 0 )
+		}
+		return builder.reverse().toString()
+	}
+
+	/*public static Integer columnNameToIndex( String name ) throws IllegalArgumentException {
 
 		name = name.toUpperCase()
-		String validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 
 		boolean isValid = true
 		Integer column  = 0
@@ -22,6 +40,6 @@ class ColumnUtils {
 			}
 		}
 
-	}
+	}*/
 
 }
