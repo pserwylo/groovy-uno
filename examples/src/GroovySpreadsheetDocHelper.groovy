@@ -35,6 +35,8 @@
 
 
 import com.serwylo.uno.Connector
+import com.serwylo.uno.spreadsheet.SpreadsheetConnector
+import com.serwylo.uno.utils.ColumnUtils
 import com.sun.star.lang.XMultiComponentFactory
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
@@ -52,43 +54,22 @@ import com.sun.star.uno.XComponentContext;
 public class GroovySpreadsheetDocHelper
 {
 
-	private Connector connector = new Connector()
+	private SpreadsheetConnector connector
 
     private XSpreadsheetDocument document;
 
     public GroovySpreadsheetDocHelper( String[] args )
     {
-        // Connect to a running office and get the service manager
-        connect();
-
-        // Create a new spreadsheet document
-        try
-        {
-            document = initDocument();
-        }
-        catch (Exception ex)
-        {
-            System.err.println( "Couldn't create document: " + ex );
-            System.err.println( "Error: Couldn't create Document\nException Message = "
-                                + ex.getMessage());
-            ex.printStackTrace();
-            System.exit( 1 );
-        }
+		connector = new SpreadsheetConnector()
+       	document = connector.open()
     }
 
 // __  helper methods  ____________________________________________
 
-    /** Returns the service manager of the connected office.
-        @return  XMultiComponentFactory interface of the service manager. */
-    public XMultiComponentFactory getServiceManager() { connector.componentFactory }
-
-    /** Returns the component context of the connected office
-        @return  XComponentContext interface of the context. */
-    public XComponentContext getContext() { connector.context }
-
-    /** Returns the whole spreadsheet document.
-        @return  XSpreadsheetDocument interface of the document. */
-    public XSpreadsheetDocument getDocument() { document }
+	public SpreadsheetConnector getConnector()
+	{
+		connector
+	}
 
     /** Inserts a new empty spreadsheet with the specified name.
         @param aName  The name of the new sheet.
@@ -96,17 +77,8 @@ public class GroovySpreadsheetDocHelper
         @return  The XSpreadsheet interface of the new sheet. */
     public XSpreadsheet insertSpreadsheet( String aName, short nIndex )
     {
-        // Collection of sheets
-        XSpreadsheets xSheets = document.sheets
-        XSpreadsheet xSheet = null
-        try {
-            xSheets.insertNewByName( aName, nIndex )
-            xSheet = xSheets[ aName ]
-        } catch ( Exception ex ) {
-            println "Error: caught exception in insertSpreadsheet()!\nException Message = $ex.message"
-            ex.printStackTrace()
-        }
-        return xSheet
+    	document.sheets.insertNewByName( aName, nIndex )
+        document.sheets[ aName ]
     }
 
 // ________________________________________________________________
@@ -121,7 +93,7 @@ public class GroovySpreadsheetDocHelper
 		String aCellName,
 		double fValue ) throws RuntimeException, Exception
     {
-        xSheet[ aCellName ].value = fValue;
+        xSheet.getCellAt( aCellName ) << fValue;
     }
 
     /** Writes a formula into a spreadsheet.
@@ -133,7 +105,7 @@ public class GroovySpreadsheetDocHelper
             String aCellName,
             String aFormula ) throws RuntimeException, Exception
     {
-        xSheet[ aCellName ].formula = aFormula
+        xSheet.getCellAt( aCellName ) << aFormula
     }
 
     /** Writes a date with standard date format into a spreadsheet.
@@ -239,12 +211,8 @@ public class GroovySpreadsheetDocHelper
         @return  A string containing the cell address. */
     public String getCellAddressString( int nColumn, int nRow )
     {
-        String aStr = "";
-        if (nColumn > 25)
-            aStr += (char) ('A' + nColumn / 26 - 1);
-        aStr += ('A' + nColumn % 26);
-        aStr += (nRow + 1);
-        return aStr;
+        String columnName = ColumnUtils.indexToName( nColumn )
+		"$columnName$nRow"
     }
 
     /** Returns the text address of the cell range.
@@ -298,19 +266,6 @@ public class GroovySpreadsheetDocHelper
             aStr += getCellRangeAddressString( xCellRange, false );
         }
         return aStr;
-    }
-
-// ________________________________________________________________
-
-    // Connect to a running office that is accepting connections.
-    private void connect() {
-		connector.connect()
-    }
-
-    /** Creates an empty spreadsheet document.
-        @return  The XSpreadsheetDocument interface of the document. */
-    private XSpreadsheetDocument initDocument() throws RuntimeException, Exception {
-       	connector.loadSpreadsheet()
     }
 
 // ________________________________________________________________

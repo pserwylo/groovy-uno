@@ -1,9 +1,12 @@
 package com.serwylo.uno.extension
 
+import com.serwylo.uno.utils.ColumnUtils
 import com.serwylo.uno.utils.DataUtils
 import com.sun.star.beans.XPropertySet
 import com.sun.star.container.XEnumerationAccess
 import com.sun.star.container.XIndexAccess
+import com.sun.star.container.XNameAccess
+import com.sun.star.container.XNamed
 import com.sun.star.lang.XComponent
 import com.sun.star.sdbc.XCloseable
 import com.sun.star.sheet.XArrayFormulaRange
@@ -13,10 +16,12 @@ import com.sun.star.sheet.XCellRangeData
 import com.sun.star.sheet.XCellRangeFormula
 import com.sun.star.sheet.XSheetAnnotationAnchor
 import com.sun.star.sheet.XSheetAnnotationsSupplier
+import com.sun.star.sheet.XSheetCellCursor
 import com.sun.star.sheet.XSheetOperation
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.sheet.XSpreadsheets
+import com.sun.star.sheet.XUsedAreaCursor
 import com.sun.star.table.CellAddress
 import com.sun.star.table.CellRangeAddress
 import com.sun.star.table.XCell
@@ -30,6 +35,10 @@ import com.sun.star.util.CloseVetoException
 import com.sun.star.util.XMergeable
 import com.sun.star.util.XReplaceDescriptor
 import com.sun.star.util.XReplaceable
+
+import java.awt.Point
+import java.awt.geom.Dimension2D
+import java.awt.geom.Point2D
 
 class UnoExtension {
 
@@ -82,28 +91,55 @@ class UnoExtension {
 	}
 
 
+	public static XSpreadsheet getAt( XSpreadsheetDocument self, String sheetName ) {
+		self.getSheets().getAt( sheetName )
+	}
+
 
 	// ========= XSpreadsheets =========
 
-	public static XSpreadsheet getAt( XSpreadsheets self, int index ) {
-		XIndexAccess xSheetsIA = cache( self, "indexAccess$index" ) {
+	public static XIndexAccess getIndexAccess( XSpreadsheets self ) {
+		cache( self, "indexAccess" ) {
 			UnoRuntime.queryInterface( XIndexAccess.class, self )
-		}
-
-		cache( self, "getAt$index" ) {
-			UnoRuntime.queryInterface( XSpreadsheet.class, xSheetsIA.getByIndex( index ) )
 		}
 	}
 
-	public static XSpreadsheet getAt( XSpreadsheets self, String key ) {
-		cache( self, "getAt$key" ) {
-			UnoRuntime.queryInterface( XSpreadsheet.class, self.getByName( key ) )
+	public static int size( XSpreadsheets self ) {
+		self.getIndexAccess().size()
+	}
+
+	public static XSpreadsheet getAt( XSpreadsheets self, int index ) {
+		cache( self, "getAt$index" ) {
+			UnoRuntime.queryInterface( XSpreadsheet.class, self.getIndexAccess().getByIndex( index ) )
 		}
 	}
 
 
 
 	// ========= XSpreadsheet =========
+
+	public static CellAddress getDimensions( XSpreadsheet self ) {
+
+		XSheetCellCursor xSheetCellCursor = self.createCursor()
+		XUsedAreaCursor xUsedAreaCursor = UnoRuntime.queryInterface( XUsedAreaCursor.class, xSheetCellCursor )
+		xUsedAreaCursor.gotoEndOfUsedArea( false )
+
+		xSheetCellCursor.getCellByPosition( 0, 0 ).address
+	}
+
+	public static XNamed toNamed( XSpreadsheet self ) {
+		cache( self, "toNamed" ) {
+			UnoRuntime.queryInterface( XNamed.class, self )
+		}
+	}
+
+	public static String getName( XSpreadsheet self ) {
+		self.toNamed().getName()
+	}
+
+	public static String setName( XSpreadsheet self, String value ) {
+		self.toNamed().setName( value )
+	}
 
 	public static XCellRange toCellRange( XSpreadsheet self ) {
 		cache( self, "toCellRange" ) {
@@ -194,14 +230,28 @@ class UnoExtension {
 	}
 
 	public static XCellRangeFormula getCellRangeFormula( XCellRange self ) {
-		cache( self, "getForumlaRange" ) {
-			UnoRuntime.queryInterface( XCellRangeFormula.class, self )
-		}
+		UnoRuntime.queryInterface( XCellRangeFormula.class, self )
+	}
+
+	public static List<List<String>> getFormulas( XCellRange self ) {
+		DataUtils.stringArraysToLists( self.getCellRangeFormula().getFormulaArray() )
 	}
 
 	public static void setFormulas( XCellRange self, List<List<String>> formulas ) {
-		XCellRangeFormula rangeFormulas = self.cellRangeFormula
-		rangeFormulas.formulaArray = DataUtils.listsToArrays( formulas )
+		XCellRangeFormula rangeFormulas = self.getCellRangeFormula()
+		rangeFormulas.setFormulaArray( DataUtils.stringListsToArrays( formulas ) )
+	}
+
+	/**
+	 * Unfotunately if I try to overload setFormulas( self, String[][] formulas ) then it still invokes
+	 * the List<List<String>> method. As such, I've put this method here for those times when we have hundreds of
+	 * thousands of rows, and it just seems silly to convert from Lists to arrays.
+	 * @param self
+	 * @param formulas
+	 */
+	public static void setFormulasFromArrays( XCellRange self, String[][] formulas ) {
+		XCellRangeFormula rangeFormulas = self.getCellRangeFormula()
+		rangeFormulas.setFormulaArray( formulas )
 	}
 
 	public static XCellRangeData getCellRangeData( XCellRange self ) {
@@ -211,20 +261,28 @@ class UnoExtension {
 	}
 
 	public static void setData( XCellRange self, Object[][] data ) {
-		XCellRangeData rangeData = self.cellRangeData
-		rangeData.dataArray = data
+		XCellRangeData rangeData = self.getCellRangeData()
+		rangeData.setDataArray( data )
+	}
+
+	public static void setData( XCellRange self, List<List<Object>> data ) {
+		self.setData( DataUtils.listsToArrays( data ) )
+	}
+
+	public static List<List<Object>> getData( XCellRange self ) {
+		DataUtils.arraysToLists( self.getCellRangeData().getDataArray() )
 	}
 
 	public static void leftShift( XCellRange self, List<List<Object>> data ) {
-		self.data = DataUtils.listsToArrays( data )
+		self.setData( data )
 	}
 
 	public static void leftShift( XCellRange self, double value ) {
-		self.data = DataUtils.valueToArrays( value, self )
+		self.setData( DataUtils.valueToArrays( value, self ) )
 	}
 
 	public static void leftShift( XCellRange self, String string ) {
-		self.data = DataUtils.stringToArrays( string, self )
+		self.setData( DataUtils.stringToArrays( string, self ) )
 	}
 
 	public static void leftShift( XCellRange self, XCellRange sourceRange ) {
@@ -305,18 +363,24 @@ class UnoExtension {
         self.sheetOperation
 	}
 
-	public static XCellRangeData getData( XCellRange self ) {
-        cache( self, "getData", ) {
-			UnoRuntime.queryInterface( XCellRangeData.class, self )
-		}
-	}
-
 	public static XArrayFormulaRange getFormulaRange( XCellRange self ) {
         cache( self, "getFormulaRange", ) {
 			UnoRuntime.queryInterface( XArrayFormulaRange.class, self )
 		}
 	}
 
+
+	public static String getName( XCellRange self ) {
+		cache( self, "getName" ) {
+			CellRangeAddress address = self.getAddress()
+			String startCol = ColumnUtils.indexToName( address.StartColumn )
+			String endCol   = ColumnUtils.indexToName( address.EndColumn )
+			int    startRow = address.StartRow + 1
+			int    endRow   = address.EndRow + 1
+
+			"$startCol$startRow:$endCol$endRow"
+		}
+	}
 
 
 	// ========= XCell =========
@@ -388,6 +452,33 @@ class UnoExtension {
 		self.getPropertyValue( key )
 	}
 
+
+
+	// ========= XNameAccess =========
+
+	public static Object getAt( XNameAccess self, String key ) {
+		self.getByName( key )
+	}
+
+	public static boolean contains( XNameAccess self, String key ) {
+		self.hasByName( key )
+	}
+
+	public static XSpreadsheet getAt( XSpreadsheets self, String key ) {
+		XNameAccess nameAccess = self.toNameAccess()
+		UnoRuntime.queryInterface( XSpreadsheet.class, nameAccess.getByName( key ) )
+	}
+
+	public static boolean contains( XSpreadsheets self, String key ) {
+		XNameAccess nameAccess = self.toNameAccess()
+		nameAccess.hasByName( key )
+	}
+
+	public static XNameAccess toNameAccess( XSpreadsheets self ) {
+		cache( self, "toNameAccess" ) {
+			UnoRuntime.queryInterface( XNameAccess.class, self )
+		}
+	}
 
 
 	// ========= XIndexAccess =========

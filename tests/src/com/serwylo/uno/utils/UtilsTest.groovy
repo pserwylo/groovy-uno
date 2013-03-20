@@ -1,10 +1,41 @@
 package com.serwylo.uno.utils
 
 import com.serwylo.uno.spreadsheet.SpreadsheetTest
+import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.table.XCellRange
 
 class UtilsTest extends SpreadsheetTest {
+
+	public void testRangeToName() {
+
+		def names = [
+			"A1"    : "A2",
+			"A2"    : "A5",
+			"A3"    : "A2000",
+			"B2"    : "C10",
+			"AA100" : "AZ200"
+		]
+
+		XSpreadsheetDocument doc = connector.open()
+		XSpreadsheet sheet       = doc[ 0 ]
+
+		names.each { entry ->
+			String start = entry.key
+			String end   = entry.value
+			String nameForward  = "$start:$end"
+			String nameBackward = "$end:$start"
+
+			XCellRange rangeForward = sheet[ nameForward ]
+			assertEquals( "Cell range name", nameForward, rangeForward.name )
+
+			XCellRange rangeBackward = sheet[ nameBackward ]
+			assertEquals( "Inverted cell range name", nameForward, rangeBackward.name )
+		}
+
+		doc.close()
+
+	}
 
 	public void testIndexToColumnName() {
 
@@ -17,7 +48,7 @@ class UtilsTest extends SpreadsheetTest {
 		]
 
 		values.each {
-			assertEquals( it.key, ColumnUtils.indexToColumnName( it.value ) )
+			assertEquals( it.key, ColumnUtils.indexToName( it.value ) )
 		}
 
 	}
