@@ -10,18 +10,8 @@ class SheetsTest extends SpreadsheetTestUsingSingleFile {
 	private static final List<String> SHEET_NAMES        = [ "First sheet", "Second sheet", "Third sheet" ]
 	private static final String MULTIPLE_SHEETS_FILENAME = "multiple-sheets.ods"
 
-	void setUp() {
-		super.setUp()
-		load( MULTIPLE_SHEETS_FILENAME )
-	}
-
-	void tearDown() {
-		doc.close()
-		super.tearDown()
-	}
-
 	void testGetAt() {
-
+		load( MULTIPLE_SHEETS_FILENAME )
 		SHEET_NAMES.each { name ->
 
 			XSpreadsheet sheet1 = doc.sheets[ name ]

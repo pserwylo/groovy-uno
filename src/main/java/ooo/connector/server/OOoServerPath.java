@@ -5,6 +5,10 @@ public class OOoServerPath {
 	private String sOfficePath = null;
 	private String programPath = null;
 
+	public OOoServerPath( String execPath ) {
+		setExecPath( execPath );
+	}
+
 	public OOoServerPath setExecPath( String path ) {
 		setSOfficePath( path );
 		setProgramPath( path );

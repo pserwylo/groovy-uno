@@ -27,9 +27,9 @@ import java.util.List;
  */
 public class OOoServer {
 
-	public static final String ACCEPT_SOCKET = "-accept=socket,host=localhost,port=8100;urp;";
+	public static final String ACCEPT_SOCKET = "--accept=socket,host=localhost,port=8100;urp;";
 
-	public static final String ACCEPT_PIPE   = "-accept=pipe,name=oooPipe;urp;";
+	public static final String ACCEPT_PIPE   = "--accept=pipe,name=oooPipe;urp;";
 
     /** The OOo server process. */
     private Process       oooProcess;
@@ -38,7 +38,7 @@ public class OOoServer {
     private OOoServerPath serverPath;
 
     /** The options for starting the OOo server. */
-    private List<String>  oooOptions = new ArrayList<String>();
+    private List<String>  oooOptions;
 
     /**
      * Constructs an OOo server which uses the folder of the OOo installation
@@ -94,8 +94,8 @@ public class OOoServer {
 
         URL[] oooExecFolderURL = new URL[] {new File( serverPath.getProgramPath() ).toURI().toURL()};
         URLClassLoader loader = new URLClassLoader(oooExecFolderURL);
-        File fOffice = NativeLibraryLoader.getResource(loader, sOffice);
-        if (fOffice == null)
+        File fOffice = new File( serverPath.getSOfficePath() );
+        if (!fOffice.exists())
             throw new BootstrapException("Could not find 'soffice' executable at " + serverPath.getProgramPath() );
 
         // create call with arguments
@@ -166,11 +166,11 @@ public class OOoServer {
 
         List<String> options = new ArrayList<String>();
 
-        options.add("-nologo");
-        options.add("-nodefault");
-        options.add("-norestore");
-        options.add("-nocrashreport");
-        options.add("-nolockcheck");
+        options.add("--nologo");
+        options.add("--nodefault");
+        options.add("--norestore");
+        options.add("--nocrashreport");
+        options.add("--nolockcheck");
 
         return options;
     }

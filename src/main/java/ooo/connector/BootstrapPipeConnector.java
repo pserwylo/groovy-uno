@@ -4,6 +4,7 @@ import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.uno.XComponentContext;
 import java.util.Random;
 import ooo.connector.server.OOoServer;
+import ooo.connector.server.OOoServerPath;
 
 /**
  * A bootstrap connector which uses a named pipe to connect to an OOo server.
@@ -18,11 +19,11 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * Constructs a bootstrap pipe connector which uses the specified folder of
      * the OOo installation containing the soffice executable.
      * 
-     * @param   oooExecFolder   The folder of the OOo installation containing the soffice executable
+     * @param   serverPath   The folder of the OOo installation containing the soffice executable
      */
-    public BootstrapPipeConnector(String oooExecFolder) {
+    public BootstrapPipeConnector(OOoServerPath serverPath) {
 
-        super(oooExecFolder);
+        super(serverPath);
     }
 
     /**
@@ -73,12 +74,12 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * executable folder of the OOo installation using a random pipe name and
      * returns a component context for using the connection to the OOo server.
      * 
-     * @param   oooExecFolder      The folder of the OOo installation containing the soffice executable
+     * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(String oooExecFolder) throws BootstrapException {
+    public static final XComponentContext bootstrap(OOoServerPath serverPath) throws BootstrapException {
 
-        BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(oooExecFolder);
+        BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(serverPath);
         return bootstrapPipeConnector.connect();
     }
 
@@ -87,13 +88,13 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * executable folder of the OOo installation using the specified pipe name
      * and returns a component context for using the connection to OOo server.
      * 
-     * @param   oooExecFolder      The folder of the OOo installation containing the soffice executable
+     * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @param   pipeName           The pipe name
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(String oooExecFolder, String pipeName) throws BootstrapException {
+    public static final XComponentContext bootstrap(OOoServerPath serverPath, String pipeName) throws BootstrapException {
 
-        BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(oooExecFolder);
+        BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(serverPath);
         return bootstrapPipeConnector.connect(pipeName);
     }
 }

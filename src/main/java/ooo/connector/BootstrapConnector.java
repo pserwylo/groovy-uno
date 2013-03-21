@@ -12,6 +12,7 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import ooo.connector.server.OOoServer;
+import ooo.connector.server.OOoServerPath;
 
 /**
  * A bootstrap connector which establishes a connection to an OOo server.
@@ -44,11 +45,11 @@ public class BootstrapConnector {
      * Constructs a bootstrap connector which uses the folder of the OOo
      * installation containing the soffice executable.
      * 
-     * @param   oooExecFoder   The folder of the OOo installation containing the soffice executable
+     * @param serverPath The folder of the OOo installation containing the soffice executable
      */
-    public BootstrapConnector(String oooExecFolder) {
+    public BootstrapConnector(OOoServerPath serverPath) {
         
-        this.oooServer = new OOoServer(oooExecFolder);
+        this.oooServer = new OOoServer(serverPath);
         this.oooConnectionString = null;
     }
 
@@ -207,14 +208,14 @@ public class BootstrapConnector {
      * The accept option and the connection string should match in connection
      * type and pipe name or host and port to get a connection.
      * 
-     * @param   oooExecFolder         The folder of the OOo installation containing the soffice executable
+     * @param   serverPath            The folder of the OOo installation containing the soffice executable
      * @param   oooAcceptOption       The accept option
      * @param   oooConnectionString   The connection string
      * @return                        The component context
      */
-    public static final XComponentContext bootstrap(String oooExecFolder, String oooAcceptOption, String oooConnectionString) throws BootstrapException {
+    public static final XComponentContext bootstrap(OOoServerPath serverPath, String oooAcceptOption, String oooConnectionString) throws BootstrapException {
 
-        BootstrapConnector bootstrapConnector = new BootstrapConnector(oooExecFolder);
+        BootstrapConnector bootstrapConnector = new BootstrapConnector(serverPath);
         return bootstrapConnector.connect(oooAcceptOption, oooConnectionString);
     }
 }

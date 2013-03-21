@@ -1,15 +1,20 @@
 package com.serwylo.uno
 
 import ooo.connector.BootstrapConnector
-import com.sun.star.comp.helper.Bootstrap
 import com.sun.star.frame.XComponentLoader
 import com.sun.star.lang.XMultiComponentFactory
 import com.sun.star.uno.UnoRuntime
 import com.sun.star.uno.XComponentContext
+import ooo.connector.BootstrapSocketConnector
+import ooo.connector.server.OOoServer
+import ooo.connector.server.OOoServerPath
 
 class Connector {
 
 	private static boolean hasConnected = false
+
+	private static BootstrapSocketConnector bootstrapSocketConnector
+	private static OOoServer server
 
 	private static XComponentContext context
     private static XMultiComponentFactory componentFactory
@@ -19,11 +24,18 @@ class Connector {
 
 	private static boolean connect() {
 		if ( !hasConnected ) {
-			context = BootstrapConnector.bootstrap( "/usr/bin/", "", "" )
-			componentFactory = context.serviceManager
-			hasConnected = true
+			List<String> options = OOoServer.getDefaultOOoOptions() + [ "--nofirststartwizard" ];
+			server                   = new OOoServer(new OOoServerPath("/usr/bin/soffice"), options);
+			bootstrapSocketConnector = new BootstrapSocketConnector(server);
+			context                  = bootstrapSocketConnector.connect();
+			componentFactory         = context.serviceManager
+			hasConnected             = true
         }
 		return hasConnected
+	}
+
+	private static void disconnect() {
+		bootstrapSocketConnector.disconnect();
 	}
 
 	protected Connector() {

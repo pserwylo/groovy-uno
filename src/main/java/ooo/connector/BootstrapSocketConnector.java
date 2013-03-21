@@ -3,6 +3,7 @@ package ooo.connector;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.uno.XComponentContext;
 import ooo.connector.server.OOoServer;
+import ooo.connector.server.OOoServerPath;
 
 /**
  * A Bootstrap Connector which uses a socket to connect to an OOo server.
@@ -12,11 +13,11 @@ public class BootstrapSocketConnector extends BootstrapConnector {
     /**
      * Constructs a bootstrap socket connector which uses the folder of the OOo installation containing the soffice executable.
      * 
-     * @param   oooExecFolder   The folder of the OOo installation containing the soffice executable
+     * @param serverPath The folder of the OOo installation containing the soffice executable
      */
-    public BootstrapSocketConnector(String oooExecFolder) {
+    public BootstrapSocketConnector(OOoServerPath serverPath) {
 
-        super(oooExecFolder);
+        super(serverPath);
     }
 
     /**
@@ -73,12 +74,12 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * executable folder of the OOo installation using a default socket and
      * returns a component context for using the connection to the OOo server.
      * 
-     * @param   oooExecFolder      The folder of the OOo installation containing the soffice executable
+     * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(String oooExecFolder) throws BootstrapException {
+    public static final XComponentContext bootstrap(OOoServerPath serverPath) throws BootstrapException {
 
-        BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(oooExecFolder);
+        BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(serverPath);
         return bootstrapSocketConnector.connect();
     }
 
@@ -88,14 +89,14 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * port for the socket and returns a component context for using the
      * connection to the OOo server.
      * 
-     * @param   oooExecFolder      The folder of the OOo installation containing the soffice executable
+     * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @param   host               The host
      * @param   port               The port
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(String oooExecFolder, String host, int port) throws BootstrapException {
+    public static final XComponentContext bootstrap(OOoServerPath serverPath, String host, int port) throws BootstrapException {
 
-        BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(oooExecFolder);
+        BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(serverPath);
         return bootstrapSocketConnector.connect(host,port);
     }
 }

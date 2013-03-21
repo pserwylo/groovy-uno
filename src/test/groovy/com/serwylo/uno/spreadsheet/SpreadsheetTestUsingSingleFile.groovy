@@ -6,8 +6,9 @@ abstract class SpreadsheetTestUsingSingleFile extends SpreadsheetTestUsingFile {
 
 
 	protected String getPathTo( String filename ) {
-		String resourceFilename = "/docs/$testDocFolderName/$filename"
-		this.class.getResource( resourceFilename ).file
+		String resourceFilename = "/home/pete/code/groovy-uno/src/test/resources/docs/$testDocFolderName/$filename"
+		return new File( resourceFilename )
+		// TODO: SpreadsheetTest.class.getResource( resourceFilename ).file
 	}
 
 	protected void load( String filename, DocumentOptions options = null ) {

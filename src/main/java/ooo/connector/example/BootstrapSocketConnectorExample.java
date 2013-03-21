@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 import java.util.List;
 import ooo.connector.BootstrapSocketConnector;
 import ooo.connector.server.OOoServer;
+import ooo.connector.server.OOoServerPath;
 
 public class BootstrapSocketConnectorExample {
     
@@ -60,7 +61,7 @@ public class BootstrapSocketConnectorExample {
     private static void convertWithStaticConnector(String loadUrl, String storeUrl) throws Exception, IllegalArgumentException, IOException, BootstrapException {
 
         // Connect to OOo
-        XComponentContext remoteContext = BootstrapSocketConnector.bootstrap(OOO_EXEC_FOLDER);
+        XComponentContext remoteContext = BootstrapSocketConnector.bootstrap(new OOoServerPath(OOO_EXEC_FOLDER));
 
         // Convert text document to PDF
         convert(loadUrl, storeUrl, remoteContext);
@@ -71,7 +72,7 @@ public class BootstrapSocketConnectorExample {
         // Create OOo server with additional -nofirststartwizard option
         List oooOptions = OOoServer.getDefaultOOoOptions();
         oooOptions.add("-nofirststartwizard");
-        OOoServer oooServer = new OOoServer(OOO_EXEC_FOLDER, oooOptions);
+        OOoServer oooServer = new OOoServer(new OOoServerPath(OOO_EXEC_FOLDER), oooOptions);
 
         // Connect to OOo
         BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(oooServer);

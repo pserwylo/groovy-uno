@@ -1,6 +1,5 @@
 package com.serwylo.uno.spreadsheet
 
-import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import org.apache.ivy.util.ChecksumHelper
 
@@ -47,7 +46,7 @@ class CsvOptionsTest extends SpreadsheetTestUsingSingleFile {
 
 	protected void load( CsvOptions options ) {
 		String path = getPathFor( options )
-		super.load( path )
+		super.load( path, options )
 	}
 
 	void testGetAt() {
@@ -118,12 +117,13 @@ class CsvOptionsTest extends SpreadsheetTestUsingSingleFile {
 
 	private void textDelimiter( CsvOptions options, String filterOptions ) {
 		assertEquals( "CSV Options", filterOptions, options.toString() )
+		load( options )
 		assertMatches( sheet["A1:C6"], TEXT_DELIMITER_VALUES )
 	}
 
 	private void fieldDelimiter( CsvOptions options, String filterOptions ) {
 		assertEquals( "CSV Options", filterOptions, options.toString() )
-		XSpreadsheetDocument doc = load( options )
+		load( options )
 		assertMatches( sheet["A1:C6"], FIELD_DELIMITERS_VALUES )
 	}
 
