@@ -1,14 +1,13 @@
 package com.serwylo.uno.utils
 
-import com.serwylo.uno.spreadsheet.SpreadsheetTest
+import com.serwylo.uno.spreadsheet.SpreadsheetTestUsingEmptyFile
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.table.XCellRange
 
-class UtilsTest extends SpreadsheetTest {
+class UtilsTest extends SpreadsheetTestUsingEmptyFile {
 
 	public void testRangeToName() {
-
 		def names = [
 			"A1"    : "A2",
 			"A2"    : "A5",
@@ -17,8 +16,7 @@ class UtilsTest extends SpreadsheetTest {
 			"AA100" : "AZ200"
 		]
 
-		XSpreadsheetDocument doc = connector.open()
-		XSpreadsheet sheet       = doc[ 0 ]
+		load()
 
 		names.each { entry ->
 			String start = entry.key
@@ -32,13 +30,9 @@ class UtilsTest extends SpreadsheetTest {
 			XCellRange rangeBackward = sheet[ nameBackward ]
 			assertEquals( "Inverted cell range name", nameForward, rangeBackward.name )
 		}
-
-		doc.close()
-
 	}
 
 	public void testIndexToColumnName() {
-
 		def values = [
 			"A"   : 0,   "B"   : 1,   "C"   : 2,
 			"AA"  : 26,  "AB"  : 27,  "AC"  : 28,
@@ -50,7 +44,6 @@ class UtilsTest extends SpreadsheetTest {
 		values.each {
 			assertEquals( it.key, ColumnUtils.indexToName( it.value ) )
 		}
-
 	}
 
 	public void testValueToArrays() {
@@ -62,11 +55,10 @@ class UtilsTest extends SpreadsheetTest {
 		Object[][] values = DataUtils.valueToArrays( Math.PI, 3, 2 )
 		assertMatches( arrayValues, values )
 
-		XSpreadsheetDocument doc = connector.open()
-		XCellRange range = doc[ 0 ][ "A1:C2" ]
+		load()
+		XCellRange range = sheet[ "A1:C2" ]
 		values = DataUtils.valueToArrays( Math.PI, range )
 		assertMatches( arrayValues, values )
-		doc.close()
 	}
 
 	public void testListsToArrays() {

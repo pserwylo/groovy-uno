@@ -1,14 +1,8 @@
 package com.serwylo.uno.spreadsheet
 
-import com.sun.star.sheet.XCellRangeFormula
-import com.sun.star.sheet.XSpreadsheet
-import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.table.XCellRange
 
-class FormulasTest extends SpreadsheetTest {
-
-	XSpreadsheetDocument doc
-	XSpreadsheet sheet
+class FormulasTest extends SpreadsheetTestUsingEmptyFile {
 
 	private static final List<List<Object>> TEST_DATA = [
 		[ 1, 10 ],
@@ -19,14 +13,7 @@ class FormulasTest extends SpreadsheetTest {
 
 	void setUp() {
 		super.setUp()
-		doc   = connector.open()
-		sheet = doc[ 0 ]
-
-	}
-
-	void tearDown() {
-		doc.close()
-		super.tearDown()
+		load()
 	}
 
 	void testCalc() {

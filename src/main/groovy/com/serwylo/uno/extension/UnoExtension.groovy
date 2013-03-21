@@ -448,7 +448,7 @@ class UnoExtension {
 		self.setPropertyValue( key, value )
 	}
 
-	public static void getAt( XPropertySet self, String key ) {
+	public static Object getAt( XPropertySet self, String key ) {
 		self.getPropertyValue( key )
 	}
 

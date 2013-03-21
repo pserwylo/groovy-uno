@@ -4,7 +4,7 @@ import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import org.apache.ivy.util.ChecksumHelper
 
-class CsvOptionsTest extends SpreadsheetTest {
+class CsvOptionsTest extends SpreadsheetTestUsingSingleFile {
 
 	private static final String[][] FIELD_DELIMITERS_VALUES = [
 		[ "First", "Second", "Third" ],
@@ -45,10 +45,13 @@ class CsvOptionsTest extends SpreadsheetTest {
 		connector = new SpreadsheetConnector()
 	}
 
+	protected void load( CsvOptions options ) {
+		String path = getPathFor( options )
+		super.load( path )
+	}
+
 	void testGetAt() {
-		String file              = getPathFor( OPT_FIELD_COMMA )
-		XSpreadsheetDocument doc = load( file, OPT_FIELD_COMMA )
-		XSpreadsheet sheet       = doc[ 0 ]
+		load( OPT_FIELD_COMMA )
 		for ( int rowIndex = 0; rowIndex < FIELD_DELIMITERS_VALUES.length; rowIndex ++ ) {
 			String[] row = FIELD_DELIMITERS_VALUES[ rowIndex ]
 			for ( int columnIndex = 0; columnIndex < row.length; columnIndex ++ ) {
@@ -57,7 +60,6 @@ class CsvOptionsTest extends SpreadsheetTest {
 				assertEquals( "Value at Column $columnIndex and Row $rowIndex", expected, actual )
 			}
 		}
-		doc.close();
 	}
 
 	void testSave() {
@@ -79,11 +81,10 @@ class CsvOptionsTest extends SpreadsheetTest {
 		File tempToFile = new File( "/tmp/${(int)(Math.random() * 10000)}-$toPath" )
 		tempToFile.deleteOnExit()
 
-		XSpreadsheetDocument doc = load( fromPath, fromOptions )
+		load( fromPath, fromOptions )
 		connector.save( doc, tempToFile.path, toOptions )
-		doc.close()
 
-		String expected = ChecksumHelper.computeAsString( new File( getRelativePathToCsv( toPath ) ), "md5" )
+		String expected = ChecksumHelper.computeAsString( new File( getPathTo( toPath ) ), "md5" )
 		String actual   = ChecksumHelper.computeAsString( tempToFile, "md5" )
 
 		assertEquals( "Converting from $fromPath to $toPath", expected, actual )
@@ -93,9 +94,8 @@ class CsvOptionsTest extends SpreadsheetTest {
 		CsvOptions options = new CsvOptions( fieldDelimiters: CsvOptions.SPACE + CsvOptions.COMMA, mergeDelimiters: true )
 		assertEquals( "CSV Options", "32/44/MRG,34,76,1,,0,false,false", options.toString() )
 
-		XSpreadsheetDocument doc = load( "comma-and-space-delimiters.csv", options )
-		assertMatches( doc[ 0 ]["A1:C6"], FIELD_DELIMITERS_VALUES )
-		doc.close()
+		load( "comma-and-space-delimiters.csv", options )
+		assertMatches( sheet["A1:C6"], FIELD_DELIMITERS_VALUES )
 	}
 
 	void testTextDelimiters() {
@@ -109,14 +109,6 @@ class CsvOptionsTest extends SpreadsheetTest {
 		fieldDelimiter( OPT_FIELD_SPACE, "32,34,76,1,,0,false,false" )
 	}
 
-	private XSpreadsheetDocument load( String filename, CsvOptions options ) {
-		connector.open( getRelativePathToCsv( filename ), options )
-	}
-
-	private String getRelativePathToCsv( String filename ) {
-		"docs/csv/$filename"
-	}
-
 	private String getPathFor( CsvOptions options ) {
 		if ( !OPTIONS_TO_FILE.containsKey( options ) ) {
 			throw new IllegalArgumentException( "Must be one of OPT_* constants." )
@@ -126,18 +118,17 @@ class CsvOptionsTest extends SpreadsheetTest {
 
 	private void textDelimiter( CsvOptions options, String filterOptions ) {
 		assertEquals( "CSV Options", filterOptions, options.toString() )
-		String file = getPathFor( options )
-		XSpreadsheetDocument doc = load( file, options )
-		assertMatches( doc[ 0 ]["A1:C6"], TEXT_DELIMITER_VALUES )
-		doc.close()
+		assertMatches( sheet["A1:C6"], TEXT_DELIMITER_VALUES )
 	}
 
 	private void fieldDelimiter( CsvOptions options, String filterOptions ) {
 		assertEquals( "CSV Options", filterOptions, options.toString() )
-		String file = getPathFor( options )
-		XSpreadsheetDocument doc = load( file, options )
-		assertMatches( doc[ 0 ]["A1:C6"], FIELD_DELIMITERS_VALUES )
-		doc.close()
+		XSpreadsheetDocument doc = load( options )
+		assertMatches( sheet["A1:C6"], FIELD_DELIMITERS_VALUES )
 	}
 
+	@Override
+	protected String getTestDocFolderName() {
+		"csv"
+	}
 }

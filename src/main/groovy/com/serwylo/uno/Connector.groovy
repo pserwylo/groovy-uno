@@ -1,5 +1,6 @@
 package com.serwylo.uno
 
+import ooo.connector.BootstrapConnector
 import com.sun.star.comp.helper.Bootstrap
 import com.sun.star.frame.XComponentLoader
 import com.sun.star.lang.XMultiComponentFactory
@@ -18,11 +19,9 @@ class Connector {
 
 	private static boolean connect() {
 		if ( !hasConnected ) {
-            try {
-                context = Bootstrap.bootstrap()
-                componentFactory = context.serviceManager
-				hasConnected = true
-            } catch( Exception e ) {}
+			context = BootstrapConnector.bootstrap( "/usr/bin/", "", "" )
+			componentFactory = context.serviceManager
+			hasConnected = true
         }
 		return hasConnected
 	}
