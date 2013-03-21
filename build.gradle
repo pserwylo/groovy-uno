@@ -1,0 +1,15 @@
+apply plugin: 'groovy'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile gradleApi()
+	groovy  localGroovy()
+
+	compile "org.openoffice:juh:3.2.1"
+	compile "org.openoffice:ridl:3.2.1"
+	compile "org.openoffice:unoil:3.2.1"
+	compile "org.openoffice:jurt:3.2.1"
+}
