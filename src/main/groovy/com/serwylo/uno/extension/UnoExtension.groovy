@@ -9,11 +9,13 @@ import com.sun.star.container.XNameAccess
 import com.sun.star.container.XNamed
 import com.sun.star.lang.XComponent
 import com.sun.star.sdbc.XCloseable
+import com.sun.star.sheet.FillDirection
 import com.sun.star.sheet.XArrayFormulaRange
 import com.sun.star.sheet.XCellAddressable
 import com.sun.star.sheet.XCellRangeAddressable
 import com.sun.star.sheet.XCellRangeData
 import com.sun.star.sheet.XCellRangeFormula
+import com.sun.star.sheet.XCellSeries
 import com.sun.star.sheet.XSheetAnnotationAnchor
 import com.sun.star.sheet.XSheetAnnotationsSupplier
 import com.sun.star.sheet.XSheetCellCursor
@@ -193,6 +195,23 @@ class UnoExtension {
 
 
 	// ========= XCellRange =========
+
+	public static XCellSeries toCellSeries( XCellRange self ) {
+		cache( self, "toCellSeries" ) {
+			UnoRuntime.queryInterface( XCellSeries.class, self )
+		}
+	}
+
+
+	public static void fillDown( XCellRange self ) {
+		self.fill( FillDirection.TO_BOTTOM )
+	}
+
+
+	public static void fill( XCellRange self, FillDirection direction ) {
+		XCellSeries series = self.toCellSeries()
+		series.fillAuto( direction, 1 )
+	}
 
 	/**
 	 * Iterates over each cell in the range (rows first, then columns).
