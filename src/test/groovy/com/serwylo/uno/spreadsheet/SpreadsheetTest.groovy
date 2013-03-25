@@ -1,5 +1,6 @@
 package com.serwylo.uno.spreadsheet
 
+import com.serwylo.uno.utils.OfficeFinder
 import com.sun.star.sheet.XSpreadsheet
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.table.XCell
@@ -11,7 +12,8 @@ abstract class SpreadsheetTest extends GroovyTestCase {
 
 	protected void setUp() {
 		super.setUp()
-		connector = new SpreadsheetConnector()
+		// connector = new SpreadsheetConnector( OfficeFinder.createFinder( "/home/pete/apps/" ) )
+		connector = new SpreadsheetConnector( OfficeFinder.createFinder( "/home/pete/apps/openoffice.org3/program/soffice" ) )
 	}
 
 	protected SpreadsheetConnector getConnector() {

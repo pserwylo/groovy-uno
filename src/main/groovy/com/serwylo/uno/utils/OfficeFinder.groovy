@@ -6,8 +6,23 @@ import ooo.connector.server.OfficePath
 abstract class OfficeFinder {
 
 	public File searchDir
+	public int maxDepth = 3
+
+	public static OfficeFinder createFinder( File file ) {
+		OfficeFinder finder = createFinder()
+		finder.searchDir = file
+		finder
+	}
+
+	public static OfficeFinder createFinder( String path ) {
+		createFinder( new File( path ) )
+	}
 
 	public static OfficeFinder createFinder() {
+		createFinderForCurrentOs()
+	}
+
+	protected static OfficeFinder createFinderForCurrentOs() {
 		[
 			new LinuxOfficeFinder(),
 			new WindowsOfficeFinder(),
@@ -28,7 +43,7 @@ abstract class OfficeFinder {
 
 		// ... and if the default one failed...
 		if ( !soffice || !soffice.exists() ) {
-			throw new OfficeNotFoundException( searchDir, soffice )
+			throw new OfficeNotFoundException( searchDir, soffice, maxDepth )
 		}
 
 		new OfficePath( soffice )
@@ -40,15 +55,15 @@ abstract class OfficeFinder {
 	 * @param dir
 	 * @return
 	 */
-	protected File findInDir( File dir ) {
+	protected File findInDir( File dir, int depth = 0 ) {
 		File soffice = null
 
 		if ( !dir.exists() ) {
 			return null
 		}
 
-		def validate = { file ->
-			if ( file.name == executableName ) {
+		def validate = { File file ->
+			if ( file.isFile() && file.name == executableName ) {
 				soffice = file
 			}
 		}
@@ -59,9 +74,12 @@ abstract class OfficeFinder {
 			validate( file )
 		}
 
-		if ( !soffice ) {
+		if ( !soffice && depth < maxDepth || depth < 0 ) {
 			dir.eachFile( FileType.DIRECTORIES ) { childDir ->
-				soffice = findInDir( childDir )
+				File found = findInDir( childDir, depth + 1 )
+				if ( found ) {
+					soffice = found
+				}
 			}
 		}
 
@@ -82,10 +100,11 @@ abstract class OfficeFinder {
 
 class OfficeNotFoundException extends FileNotFoundException {
 
-	public OfficeNotFoundException( File searchDir, File defaultPath ) {
+	public OfficeNotFoundException( File searchDir, File defaultPath, int maxDepth ) {
 		super(
 			"Couldn't find soffice executable at " +
-			[ searchDir, defaultPath ].findAll { it != null }.join( " or " )
+			[ searchDir, defaultPath ].findAll { it != null }.join( " or " ) +
+			( maxDepth >= 0 ? " (searched $maxDepth folders deep)" : "" )
 		)
 	}
 
