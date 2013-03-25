@@ -12,8 +12,8 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import java.util.List;
 import ooo.connector.BootstrapSocketConnector;
-import ooo.connector.server.OOoServer;
-import ooo.connector.server.OOoServerPath;
+import ooo.connector.server.OfficeServer;
+import ooo.connector.server.OfficePath;
 
 public class BootstrapSocketConnectorExample {
     
@@ -61,7 +61,7 @@ public class BootstrapSocketConnectorExample {
     private static void convertWithStaticConnector(String loadUrl, String storeUrl) throws Exception, IllegalArgumentException, IOException, BootstrapException {
 
         // Connect to OOo
-        XComponentContext remoteContext = BootstrapSocketConnector.bootstrap(new OOoServerPath(OOO_EXEC_FOLDER));
+        XComponentContext remoteContext = BootstrapSocketConnector.bootstrap(new OfficePath(OOO_EXEC_FOLDER));
 
         // Convert text document to PDF
         convert(loadUrl, storeUrl, remoteContext);
@@ -70,9 +70,9 @@ public class BootstrapSocketConnectorExample {
     private static void convertWithConnector(String loadUrl, String storeUrl) throws Exception, IllegalArgumentException, IOException, BootstrapException {
 
         // Create OOo server with additional -nofirststartwizard option
-        List oooOptions = OOoServer.getDefaultOOoOptions();
-        oooOptions.add("-nofirststartwizard");
-        OOoServer oooServer = new OOoServer(new OOoServerPath(OOO_EXEC_FOLDER), oooOptions);
+        List<String> oooOptions = OfficeServer.getDefaultOOoOptions();
+        oooOptions.add("--nofirststartwizard");
+        OfficeServer oooServer = new OfficeServer(new OfficePath(OOO_EXEC_FOLDER), oooOptions);
 
         // Connect to OOo
         BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(oooServer);

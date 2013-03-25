@@ -2,8 +2,8 @@ package ooo.connector;
 
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.uno.XComponentContext;
-import ooo.connector.server.OOoServer;
-import ooo.connector.server.OOoServerPath;
+import ooo.connector.server.OfficeServer;
+import ooo.connector.server.OfficePath;
 
 /**
  * A Bootstrap Connector which uses a socket to connect to an OOo server.
@@ -15,7 +15,7 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * 
      * @param serverPath The folder of the OOo installation containing the soffice executable
      */
-    public BootstrapSocketConnector(OOoServerPath serverPath) {
+    public BootstrapSocketConnector(OfficePath serverPath) {
 
         super(serverPath);
     }
@@ -26,7 +26,7 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * 
      * @param   oooServer   The OOo server
      */
-    public BootstrapSocketConnector(OOoServer oooServer) {
+    public BootstrapSocketConnector(OfficeServer oooServer) {
 
         super(oooServer);
     }
@@ -61,7 +61,7 @@ public class BootstrapSocketConnector extends BootstrapConnector {
         String hostAndPort = "host="+host+",port="+port;
 
         // accept option
-        String oooAcceptOption = "-accept=socket,"+hostAndPort+";urp;";
+        String oooAcceptOption = "--accept=socket,"+hostAndPort+";urp;";
 
         // connection string
         String unoConnectString = "uno:socket,"+hostAndPort+";urp;StarOffice.ComponentContext";
@@ -77,7 +77,7 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(OOoServerPath serverPath) throws BootstrapException {
+    public static final XComponentContext bootstrap(OfficePath serverPath) throws BootstrapException {
 
         BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(serverPath);
         return bootstrapSocketConnector.connect();
@@ -94,7 +94,7 @@ public class BootstrapSocketConnector extends BootstrapConnector {
      * @param   port               The port
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(OOoServerPath serverPath, String host, int port) throws BootstrapException {
+    public static final XComponentContext bootstrap(OfficePath serverPath, String host, int port) throws BootstrapException {
 
         BootstrapSocketConnector bootstrapSocketConnector = new BootstrapSocketConnector(serverPath);
         return bootstrapSocketConnector.connect(host,port);

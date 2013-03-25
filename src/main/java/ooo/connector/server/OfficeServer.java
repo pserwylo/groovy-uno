@@ -1,14 +1,13 @@
 package ooo.connector.server;
 
 import com.sun.star.comp.helper.BootstrapException;
-import com.sun.star.lib.util.NativeLibraryLoader;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.List;
  * "Bootstrap.java" is there available at
  * http://udk.openoffice.org/source/browse/udk/javaunohelper/com/sun/star/comp/helper/Bootstrap.java?view=markup
  */
-public class OOoServer {
+public class OfficeServer {
 
 	public static final String ACCEPT_SOCKET = "--accept=socket,host=localhost,port=8100;urp;";
 
@@ -35,7 +34,7 @@ public class OOoServer {
     private Process       oooProcess;
 
     /** Points to the relevant installations 'program' folder and the 'soffice' executable. */
-    private OOoServerPath serverPath;
+    private OfficePath serverPath;
 
     /** The options for starting the OOo server. */
     private List<String>  oooOptions;
@@ -47,7 +46,7 @@ public class OOoServer {
      * 
      * @param serverPath Where to find the 'soffice' bin and the 'program' folder.
      */
-    public OOoServer( OOoServerPath serverPath ) {
+    public OfficeServer( OfficePath serverPath ) {
 
         this.oooProcess = null;
         this.serverPath = serverPath;
@@ -62,7 +61,7 @@ public class OOoServer {
      * @param   serverPath   Where to find the 'soffice' bin and the 'program' folder.
      * @param   oooOptions   The list of options
      */
-    public OOoServer(OOoServerPath serverPath, List<String> oooOptions) {
+    public OfficeServer( OfficePath serverPath, List<String> oooOptions ) {
 
         this.oooProcess = null;
         this.serverPath = serverPath;
@@ -92,11 +91,11 @@ public class OOoServer {
         // find office executable relative to this class's class loader
         String sOffice = System.getProperty("os.name").startsWith("Windows")? "soffice.exe": "soffice";
 
-        URL[] oooExecFolderURL = new URL[] {new File( serverPath.getProgramPath() ).toURI().toURL()};
+        URL[] oooExecFolderURL = new URL[] { serverPath.getBinaryFile().toURI().toURL()};
         URLClassLoader loader = new URLClassLoader(oooExecFolderURL);
-        File fOffice = new File( serverPath.getSOfficePath() );
+        File fOffice = serverPath.getBinaryFile();
         if (!fOffice.exists())
-            throw new BootstrapException("Could not find 'soffice' executable at " + serverPath.getProgramPath() );
+            throw new BootstrapException("Could not find 'soffice' executable at " + serverPath.getBinaryFile() );
 
         // create call with arguments
         int arguments = oooOptions.size()+1;

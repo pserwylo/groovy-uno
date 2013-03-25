@@ -3,8 +3,8 @@ package ooo.connector;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.uno.XComponentContext;
 import java.util.Random;
-import ooo.connector.server.OOoServer;
-import ooo.connector.server.OOoServerPath;
+import ooo.connector.server.OfficeServer;
+import ooo.connector.server.OfficePath;
 
 /**
  * A bootstrap connector which uses a named pipe to connect to an OOo server.
@@ -21,7 +21,7 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * 
      * @param   serverPath   The folder of the OOo installation containing the soffice executable
      */
-    public BootstrapPipeConnector(OOoServerPath serverPath) {
+    public BootstrapPipeConnector(OfficePath serverPath) {
 
         super(serverPath);
     }
@@ -32,7 +32,7 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * 
      * @param   oooServer   The OOo server
      */
-    public BootstrapPipeConnector(OOoServer oooServer) {
+    public BootstrapPipeConnector(OfficeServer oooServer) {
 
         super(oooServer);
     }
@@ -77,7 +77,7 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * @param   serverPath      The folder of the OOo installation containing the soffice executable
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(OOoServerPath serverPath) throws BootstrapException {
+    public static final XComponentContext bootstrap(OfficePath serverPath) throws BootstrapException {
 
         BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(serverPath);
         return bootstrapPipeConnector.connect();
@@ -92,7 +92,7 @@ public class BootstrapPipeConnector extends BootstrapConnector {
      * @param   pipeName           The pipe name
      * @return                     The component context
      */
-    public static final XComponentContext bootstrap(OOoServerPath serverPath, String pipeName) throws BootstrapException {
+    public static final XComponentContext bootstrap(OfficePath serverPath, String pipeName) throws BootstrapException {
 
         BootstrapPipeConnector bootstrapPipeConnector = new BootstrapPipeConnector(serverPath);
         return bootstrapPipeConnector.connect(pipeName);

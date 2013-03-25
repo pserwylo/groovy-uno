@@ -1,20 +1,20 @@
 package com.serwylo.uno
 
-import ooo.connector.BootstrapConnector
+import com.serwylo.uno.utils.OfficeFinder
 import com.sun.star.frame.XComponentLoader
 import com.sun.star.lang.XMultiComponentFactory
 import com.sun.star.uno.UnoRuntime
 import com.sun.star.uno.XComponentContext
 import ooo.connector.BootstrapSocketConnector
-import ooo.connector.server.OOoServer
-import ooo.connector.server.OOoServerPath
+import ooo.connector.server.OfficePath
+import ooo.connector.server.OfficeServer
 
 class Connector {
 
 	private static boolean hasConnected = false
 
 	private static BootstrapSocketConnector bootstrapSocketConnector
-	private static OOoServer server
+	private static OfficeServer server
 
 	private static XComponentContext context
     private static XMultiComponentFactory componentFactory
@@ -22,10 +22,12 @@ class Connector {
 
 	private static String NEW_PREFIX = "private:factory/"
 
-	private static boolean connect() {
+	private static boolean connect( OfficePath path ) {
 		if ( !hasConnected ) {
-			List<String> options = OOoServer.getDefaultOOoOptions() + [ "--nofirststartwizard" ];
-			server                   = new OOoServer(new OOoServerPath("/usr/bin/soffice"), options);
+
+			List<String> options = OfficeServer.getDefaultOOoOptions() + [ "--nofirststartwizard" ];
+
+			server                   = new OfficeServer( path, options );
 			bootstrapSocketConnector = new BootstrapSocketConnector(server);
 			context                  = bootstrapSocketConnector.connect();
 			componentFactory         = context.serviceManager
@@ -38,8 +40,21 @@ class Connector {
 		bootstrapSocketConnector.disconnect();
 	}
 
+	protected Connector( OfficeFinder finder ) {
+		connect( finder.path )
+	}
+
+	protected Connector( OfficePath path ) {
+		connect( path )
+	}
+
+	protected Connector( String path ) {
+		connect( new OfficePath( path ) )
+	}
+
 	protected Connector() {
-		connect()
+		OfficePath path = OfficeFinder.createFinder().path
+		connect( path )
 	}
 
 	public XComponentContext getContext() {

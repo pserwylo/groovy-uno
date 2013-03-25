@@ -2,14 +2,28 @@ package com.serwylo.uno.spreadsheet
 
 import com.serwylo.uno.Connector
 import com.serwylo.uno.DocumentOptions
+import com.serwylo.uno.utils.OfficeFinder
 import com.sun.star.frame.FrameSearchFlag
 import com.sun.star.frame.XStorable
 import com.sun.star.lang.XComponent
 import com.sun.star.sheet.XSpreadsheetDocument
 import com.sun.star.uno.UnoRuntime
 import com.sun.star.beans.PropertyValue
+import ooo.connector.server.OfficePath
 
 class SpreadsheetConnector extends Connector {
+
+	public SpreadsheetConnector( OfficeFinder finder ) {
+		super( finder )
+	}
+
+	public SpreadsheetConnector( OfficePath path ) {
+		super( path )
+	}
+
+	public SpreadsheetConnector( String path ) {
+		super( path )
+	}
 
 	public SpreadsheetConnector() {
 		super()
