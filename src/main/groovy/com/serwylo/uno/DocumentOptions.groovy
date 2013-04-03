@@ -6,8 +6,13 @@ class DocumentOptions {
 
 	boolean hideFrame = true
 
+	boolean overwrite = false
+
 	PropertyValue[] getProperties() {
-		List<PropertyValue> documentProps = [ getPropertyHideFrame() ]
+		List<PropertyValue> documentProps = [
+			getPropertyHideFrame(),
+			// getPropertyOverwrite(),
+		]
 		documentProps.addAll( additionalProperties )
 		(PropertyValue[])documentProps.toArray()
 	}
@@ -21,6 +26,10 @@ class DocumentOptions {
 
 	private PropertyValue getPropertyHideFrame() {
 		new PropertyValue( Name: "Hidden", Value: hideFrame )
+	}
+
+	private PropertyValue getPropertyOverwrite() {
+		new PropertyValue( Name: "Overwrite", Value: overwrite )
 	}
 
 }

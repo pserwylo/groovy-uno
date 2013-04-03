@@ -1,6 +1,7 @@
 package ooo.connector.server;
 
 import com.sun.star.comp.helper.BootstrapException;
+import com.sun.star.lib.util.NativeLibraryLoader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -93,6 +94,9 @@ public class OfficeServer {
 
         URL[] oooExecFolderURL = new URL[] { serverPath.getBinaryFile().toURI().toURL()};
         URLClassLoader loader = new URLClassLoader(oooExecFolderURL);
+
+		NativeLibraryLoader.getResource( loader, "test.jar" );
+
         File fOffice = serverPath.getBinaryFile();
         if (!fOffice.exists())
             throw new BootstrapException("Could not find 'soffice' executable at " + serverPath.getBinaryFile() );

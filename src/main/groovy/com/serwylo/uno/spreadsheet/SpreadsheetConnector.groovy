@@ -2,7 +2,7 @@ package com.serwylo.uno.spreadsheet
 
 import com.serwylo.uno.Connector
 import com.serwylo.uno.DocumentOptions
-import com.serwylo.uno.utils.OfficeFinder
+import com.serwylo.uno.finder.OfficeFinder
 import com.sun.star.frame.FrameSearchFlag
 import com.sun.star.frame.XStorable
 import com.sun.star.lang.XComponent

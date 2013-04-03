@@ -72,13 +72,16 @@ class CsvOptionsTest extends SpreadsheetTestUsingSingleFile {
 		convertDocument( OPT_TEXT_SINGLE_QUOTE, OPT_TEXT_DOUBLE_QUOTE )
 	}
 
+	void testOverwrite() {
+
+	}
+
 	protected void convertDocument( CsvOptions fromOptions, CsvOptions toOptions ) {
 		String fromPath = getPathFor( fromOptions )
 		String toPath   = getPathFor( toOptions   )
 
 		// TODO: Temp file properly...
-		File tempToFile = new File( "/tmp/${(int)(Math.random() * 10000)}-$toPath" )
-		tempToFile.deleteOnExit()
+		File tempToFile = File.createTempFile( "groovy-uno-test-", toPath )
 
 		load( fromPath, fromOptions )
 		connector.save( doc, tempToFile.path, toOptions )

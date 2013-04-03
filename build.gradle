@@ -1,5 +1,13 @@
 apply plugin: 'groovy'
 
+jar {
+	manifest {
+		attributes( 
+			"Main-Class" : "com.sun.star.lib.loader.Loader",
+		)
+	}
+}
+
 repositories {
 	mavenCentral()
 }
