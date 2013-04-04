@@ -41,7 +41,7 @@ class Connector {
 	}
 
 	protected Connector( OfficeFinder finder ) {
-		connect( finder.path )
+		this( finder.SOfficePath.absolutePath )
 	}
 
 	protected Connector( OfficePath path ) {
@@ -49,7 +49,7 @@ class Connector {
 	}
 
 	protected Connector( String path ) {
-		connect( new OfficePath( path ) )
+		this( new OfficePath( path ) )
 	}
 
 	protected Connector() {

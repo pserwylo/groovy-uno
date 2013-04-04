@@ -16,7 +16,9 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-package com.sun.star.lib.loader;
+package com.star.lib.loader;
+
+import com.serwylo.uno.finder.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,7 +81,7 @@ public final class Loader {
                         (JarURLConnection) jarurl.openConnection();
                     Manifest mf = jarConnection.getManifest();
                     Attributes attrs = mf.getAttributes(
-							"com/sun/star/lib/loader/Loader.class" );
+							"com/star/lib/loader/Loader.class");
                     if ( attrs != null ) {
                         className = attrs.getValue( "Application-Class" );
                         if ( className != null )
@@ -112,7 +114,7 @@ public final class Loader {
                 throw new IllegalArgumentException(
                     "The name of the class to be loaded must be either " +
                     "specified in the Main-Class attribute of the " +
-							"com/sun/star/lib/loader/Loader.class entry " +
+							"com/star/lib/loader/Loader.class entry " +
                     "of the manifest file or as a command line argument." );
             }
         } else {
@@ -138,10 +140,6 @@ public final class Loader {
      */
     public static synchronized ClassLoader getCustomLoader() {
 
-        final String CLASSESDIR = "classes";
-        final String URE_DIR = "URE" + File.separator + "java";
-        final String JUHJAR = "juh.jar";
-
         if ( m_Loader == null ) {
 
             // get the urls from which to load classes and resources
@@ -165,15 +163,7 @@ public final class Loader {
             // from the UNO installation
             String path = InstallationFinder.getPath();
             if ( path != null ) {
-                File fClassesDir = new File( path, CLASSESDIR );
-                File fUreDir     = new File( path, URE_DIR );
-                File fJuh        = new File( fClassesDir, JUHJAR );
-                
-				File fUreJuh     = new File( fUreDir, JUHJAR );
-				if ( fUreJuh.exists() ) {
-					fJuh = fUreJuh;
-				}
-
+                File fJuh = OfficeFinder.createFinder().getJarJuh();
                 if ( fJuh.exists() ) {
                     URL[] clurls = new URL[1];
                     try {

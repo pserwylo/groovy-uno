@@ -7,12 +7,12 @@ public class OfficePath
 
 	private File binaryFile = null;
 
-	public OfficePath( File file ) {
-		this.binaryFile = file;
+	public OfficePath( File binary ) {
+		this.binaryFile = binary;
 	}
 
-	public OfficePath( String path ) {
-		this.binaryFile = new File( path );
+	public OfficePath( String binaryPath ) {
+		this.binaryFile = new File( binaryPath );
 	}
 
 	public File getBinaryFile() {

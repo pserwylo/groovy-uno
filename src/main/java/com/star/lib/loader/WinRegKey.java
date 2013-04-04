@@ -16,7 +16,7 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-package com.sun.star.lib.loader;
+package com.star.lib.loader;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

@@ -16,22 +16,15 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-package com.sun.star.lib.loader;
+package com.star.lib.loader;
 
-import com.serwylo.uno.finder.WindowsOfficeFinder
-import com.serwylo.uno.utils.WindowsOfficeFinder;
+import com.serwylo.uno.finder.WindowsOfficeFinder;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 /**
  * This class finds a UNO installation on the system.
@@ -133,7 +126,7 @@ final class InstallationFinder {
     }
 
 	public static String getPathFromWindowsHeuristicSearch() {
-		File path  = new WindowsOfficeFinder().getInstalledPath();
+		File path  = new WindowsOfficeFinder().getInstalledDir();
 		return path != null ? path.getAbsolutePath() : null;
 	}
 
