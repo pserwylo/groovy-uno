@@ -37,9 +37,18 @@ class SpreadsheetConnector extends Connector {
 		openSpreadsheet( filename, options?.properties )
 	}
 
+	public XSpreadsheetDocument open( File file, DocumentOptions options = null ) {
+		openSpreadsheet( file.path, options?.properties )
+	}
+
 	public XSpreadsheetDocument openQuietly( String filename ) {
 		DocumentOptions options = new DocumentOptions( hideFrame : true )
 		openSpreadsheet( filename, options.properties )
+	}
+
+	public XSpreadsheetDocument openQuietly( File file ) {
+		DocumentOptions options = new DocumentOptions( hideFrame : true )
+		openSpreadsheet( file.path, options.properties )
 	}
 
 	protected XSpreadsheetDocument openSpreadsheet( String path, PropertyValue[] properties = null ) {
